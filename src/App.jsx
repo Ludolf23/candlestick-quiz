@@ -1194,6 +1194,40 @@ export default function App() {
             Legende: Signalstärke 1–10 · Neutral = Richtung erst durch Folgekerze · Wirkungsdauer in Tagen · Strategien für konservatives Swing-Trading
           </footer>
         </div>
+        <hr style={{ marginTop: "40px", opacity: 0.2 }} />
+
+<div style={{ fontSize: "12px", opacity: 0.7, padding: "20px" }}>
+  <h3>Impressum</h3>
+
+  <p>
+    Angaben gemäß § 5 TMG:
+    <br />
+    Ludolf Schnittger
+    <br />
+    Mexikoring 15
+    <br />
+    22297 Hamburg
+  </p>
+
+  <p>
+    Kontakt:
+    <br />
+    E-Mail: gaucho0@web.de
+  </p>
+
+  <p>
+    Haftungsausschluss:
+    <br />
+    Die Inhalte dieses Candlestick Quiz dienen ausschließlich zu Lern- und
+    Informationszwecken im Bereich Trading, Börse und technische Analyse.
+    Es handelt sich ausdrücklich nicht um Anlageberatung oder eine Empfehlung
+    zum Kauf oder Verkauf von Finanzinstrumenten.
+  </p>
+
+  <p>
+    © {new Date().getFullYear()} Candlestick Quiz – Kerzenmuster lernen
+  </p>
+</div>
       </div>
     </>
   );
