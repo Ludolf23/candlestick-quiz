@@ -405,7 +405,7 @@ const candles = [
     strategie: "Einstieg erst nach Bestätigung: grüne Folgekerze über dem Hammer-Hoch. Stop unter das Tief der Lunte, Ziel: nächster Widerstand oder MA20.",
     wirkung: "2–3",
     staerke: 4,
-    svg: () => <svg width={24} height={41} viewBox="0 0 28 48"><line x1="14" x2="14" y1="8" y2="42" stroke="#484f58" strokeWidth="1.5"/><rect x="8" y="16" width="12" height="8" fill="#3fb950" stroke="#238636" strokeWidth="0.5" rx="1.5"/></svg>,
+    svg: () => <svg width={24} height={41} viewBox="0 0 28 48"><line x1="14" x2="14" y1="24" y2="42" stroke="#484f58" strokeWidth="1.5"/><rect x="8" y="15" width="12" height="9" fill="#3fb950" stroke="#238636" strokeWidth="0.5" rx="1.5"/></svg>,
   },
   {
     name: "Hanging Man",
@@ -423,7 +423,7 @@ const candles = [
     strategie: "Swing-Trader warten auf eine rote Bestätigungskerze unterhalb des Hanging-Man-Körpers. Stop über dem Hoch, Ziel: nächster Support oder MA20.",
     wirkung: "2",
     staerke: 5,
-    svg: () => <svg width={24} height={41} viewBox="0 0 28 48"><line x1="14" x2="14" y1="8" y2="42" stroke="#484f58" strokeWidth="1.5"/><rect x="8" y="12" width="12" height="8" fill="#f85149" stroke="#da3633" strokeWidth="0.5" rx="1.5"/></svg>,
+    svg: () => <svg width={24} height={41} viewBox="0 0 28 48"><line x1="14" x2="14" y1="24" y2="42" stroke="#484f58" strokeWidth="1.5"/><rect x="8" y="15" width="12" height="9" fill="#f85149" stroke="#da3633" strokeWidth="0.5" rx="1.5"/></svg>,
   },
   {
     name: "Dragonfly Doji",
@@ -477,7 +477,7 @@ const candles = [
     strategie: "Sehr konservativ: nur nach klarer grüner Bestätigungskerze über dem Hoch einsteigen. Stop unter dem Tief der Kerze.",
     wirkung: "2–3",
     staerke: 4,
-    svg: () => <svg width={24} height={41} viewBox="0 0 28 48"><line x1="14" x2="14" y1="6" y2="30" stroke="#484f58" strokeWidth="1.5"/><rect x="8" y="30" width="12" height="8" fill="#3fb950" stroke="#238636" strokeWidth="0.5" rx="1.5"/></svg>,
+    svg: () => <svg width={24} height={41} viewBox="0 0 28 48"><line x1="14" x2="14" y1="6" y2="33" stroke="#484f58" strokeWidth="1.5"/><rect x="8" y="33" width="12" height="9" fill="#3fb950" stroke="#238636" strokeWidth="0.5" rx="1.5"/></svg>,
   },
   {
     name: "Shooting Star",
@@ -682,7 +682,7 @@ const randomFeedback = (ok) => { const a = ok ? FEEDBACK_CORRECT : FEEDBACK_WRON
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
 export default function App() {
-  const [theme, setTheme] = useState(() => localStorage.getItem("cq_theme") || "dark");
+  const [theme, setTheme] = useState(() => localStorage.getItem("cq_theme") || "light");
   setThemeTokens(theme);
 
   const [mode,         setMode]         = useState("quiz");
@@ -821,11 +821,14 @@ export default function App() {
               <div className="score-badge">Punkte <span>{score}</span></div>
               <div style={{ width: 1, height: 24, background: C.border }} />
               <button className="nav-btn" onClick={() => setTheme((t) => t === "dark" ? "light" : "dark")} title="Theme wechseln" style={{ fontSize: 15, padding: "5px 10px" }}>
-                {theme === "dark" ? "☀️" : "🌙"}
+                {theme === "dark"
+                  ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                  : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                }
               </button>
               <div style={{ width: 1, height: 24, background: C.border }} />
-              <button className={`nav-btn${mode === "quiz"  ? " active" : ""}`} onClick={() => setMode("quiz")}>Quiz</button>
-              <button className={`nav-btn${mode === "flash" ? " active" : ""}`} onClick={() => setMode("flash")}>Flashcards</button>
+              <button className={`nav-btn${mode === "quiz"  ? " active" : ""}`} onClick={() => setMode("quiz")} title="Quiz: Beantworte 10 Fragen zu Candlestick Mustern">Quiz</button>
+              <button className={`nav-btn${mode === "flash" ? " active" : ""}`} onClick={() => setMode("flash")} title="Flashcards: Alle 10 Muster auf einen Blick – ideal zum Lernen">Flashcards</button>
               <button className="nav-btn" onClick={() => setShowResetConfirm(true)}>Reset</button>
               {inReview && <button className="nav-btn danger" onClick={stopReview}>Review ✕</button>}
             </div>
@@ -857,7 +860,7 @@ export default function App() {
                 ))}
               </div>
               <div style={{ display: "flex", justifyContent: "center", paddingTop: 4 }}>
-                <button onClick={() => document.getElementById("quiz-anchor")?.scrollIntoView({ behavior: "smooth" })}
+                <button onClick={() => { setMode("quiz"); setTimeout(() => document.getElementById("quiz-anchor")?.scrollIntoView({ behavior: "smooth" }), 50); }}
                   style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "13px 28px", borderRadius: 8, background: C.green, color: "#fff", fontWeight: 600, fontSize: 15, border: "none", cursor: "pointer", boxShadow: "0 0 20px rgba(63,185,80,0.3)" }}>
                   Quiz jetzt starten →
                 </button>
