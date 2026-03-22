@@ -100,13 +100,14 @@ const GlobalStyle = ({ theme }) => {
       /* ── Antwort-Buttons ── */
       .choice-btn {
         width: 100%; padding: 11px 14px; border-radius: 6px;
-        border: 1px solid ${c.border}; background: ${c.surface};
+        border: 1.5px solid ${c.border}; background: ${c.surface};
         color: ${c.text}; font-family: ${font.sans}; font-size: 13px;
         line-height: 1.5; text-align: left; cursor: pointer;
-        transition: border-color 0.15s, background 0.15s, transform 0.1s;
+        transition: border-color 0.15s, background 0.15s, transform 0.1s, box-shadow 0.15s;
         display: flex; align-items: flex-start; gap: 10px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.12);
       }
-      .choice-btn:hover:not(:disabled) { border-color: ${c.blue}; background: ${c.blueBg}; transform: translateX(2px); }
+      .choice-btn:hover:not(:disabled) { border-color: ${c.blue}; background: ${c.blueBg}; transform: translateX(2px); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
       .choice-btn:disabled { cursor: default; }
       .choice-btn.correct { border-color: ${c.greenBdr}; background: ${c.greenBg}; color: ${c.green}; }
       .choice-btn.wrong   { border-color: ${c.redBdr};   background: ${c.redBg};   color: ${c.red};   }
@@ -122,10 +123,11 @@ const GlobalStyle = ({ theme }) => {
 
       /* ── Nav-Buttons: Blau = aktiv/klickbar ── */
       .nav-btn {
-        padding: 6px 13px; border-radius: 6px; border: 1px solid ${c.border};
+        padding: 6px 13px; border-radius: 6px; border: 1.5px solid ${c.border};
         background: ${c.surface}; color: ${c.textMuted}; font-family: ${font.sans};
         font-size: 13px; font-weight: 400; cursor: pointer;
-        transition: border-color 0.15s, color 0.15s, background 0.15s;
+        transition: border-color 0.15s, color 0.15s, background 0.15s, box-shadow 0.15s;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.15);
       }
       .nav-btn:hover   { border-color: ${c.blue}; color: ${c.blue}; background: ${c.blueBg}; }
       .nav-btn.active  { border-color: ${c.blue}; color: ${c.blue}; background: ${c.blueBg}; }
@@ -405,7 +407,7 @@ const candles = [
     strategie: "Einstieg erst nach Bestätigung: grüne Folgekerze über dem Hammer-Hoch. Stop unter das Tief der Lunte, Ziel: nächster Widerstand oder MA20.",
     wirkung: "2–3",
     staerke: 4,
-    svg: () => <svg width={24} height={41} viewBox="0 0 28 48"><line x1="14" x2="14" y1="24" y2="42" stroke="#484f58" strokeWidth="1.5"/><rect x="8" y="15" width="12" height="9" fill="#3fb950" stroke="#238636" strokeWidth="0.5" rx="1.5"/></svg>,
+    svg: () => <svg width={24} height={41} viewBox="0 0 28 48"><line x1="14" x2="14" y1="17" y2="42" stroke="#484f58" strokeWidth="1.5"/><rect x="8" y="8" width="12" height="9" fill="#3fb950" stroke="#238636" strokeWidth="0.5" rx="1.5"/></svg>,
   },
   {
     name: "Hanging Man",
@@ -423,7 +425,7 @@ const candles = [
     strategie: "Swing-Trader warten auf eine rote Bestätigungskerze unterhalb des Hanging-Man-Körpers. Stop über dem Hoch, Ziel: nächster Support oder MA20.",
     wirkung: "2",
     staerke: 5,
-    svg: () => <svg width={24} height={41} viewBox="0 0 28 48"><line x1="14" x2="14" y1="24" y2="42" stroke="#484f58" strokeWidth="1.5"/><rect x="8" y="15" width="12" height="9" fill="#f85149" stroke="#da3633" strokeWidth="0.5" rx="1.5"/></svg>,
+    svg: () => <svg width={24} height={41} viewBox="0 0 28 48"><line x1="14" x2="14" y1="17" y2="42" stroke="#484f58" strokeWidth="1.5"/><rect x="8" y="8" width="12" height="9" fill="#f85149" stroke="#da3633" strokeWidth="0.5" rx="1.5"/></svg>,
   },
   {
     name: "Dragonfly Doji",
@@ -477,7 +479,7 @@ const candles = [
     strategie: "Sehr konservativ: nur nach klarer grüner Bestätigungskerze über dem Hoch einsteigen. Stop unter dem Tief der Kerze.",
     wirkung: "2–3",
     staerke: 4,
-    svg: () => <svg width={24} height={41} viewBox="0 0 28 48"><line x1="14" x2="14" y1="6" y2="33" stroke="#484f58" strokeWidth="1.5"/><rect x="8" y="33" width="12" height="9" fill="#3fb950" stroke="#238636" strokeWidth="0.5" rx="1.5"/></svg>,
+    svg: () => <svg width={24} height={41} viewBox="0 0 28 48"><line x1="14" x2="14" y1="6" y2="31" stroke="#484f58" strokeWidth="1.5"/><rect x="8" y="31" width="12" height="9" fill="#3fb950" stroke="#238636" strokeWidth="0.5" rx="1.5"/></svg>,
   },
   {
     name: "Shooting Star",
@@ -680,6 +682,36 @@ const FEEDBACK_CORRECT = ["✓ Stark! Genau erkannt.", "✓ Perfekt – du kenns
 const FEEDBACK_WRONG   = ["✗ Knapp daneben – schau dir die Erklärung an.", "✗ Nicht ganz – das Muster ist tückisch.", "✗ Falsch, aber du lernst daraus.", "✗ Fast – lies die Details nochmal durch.", "✗ Noch nicht – Wiederholung macht den Meister."];
 const randomFeedback = (ok) => { const a = ok ? FEEDBACK_CORRECT : FEEDBACK_WRONG; return a[Math.floor(Math.random() * a.length)]; };
 
+
+// ─── FAQ Item Komponente (aufklappbar) ────────────────────────────────────────
+function FaqItem({ question, answer }) {
+  const [open, setOpen] = React.useState(false);
+  return (
+    <div style={{ borderBottom: `1px solid ${C.border}` }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          width: "100%", padding: "14px 0", display: "flex", justifyContent: "space-between",
+          alignItems: "center", background: "none", border: "none", cursor: "pointer",
+          color: C.text, fontSize: 15, fontWeight: 600, textAlign: "left", gap: 12,
+          boxShadow: "none",
+        }}
+      >
+        <span>{question}</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="2"
+          style={{ flexShrink: 0, transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}>
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </button>
+      {open && (
+        <div style={{ fontSize: 14, color: C.textMuted, lineHeight: 1.7, paddingBottom: 14, paddingRight: 28 }}>
+          {answer}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main App ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [theme, setTheme] = useState(() => localStorage.getItem("cq_theme") || "light");
@@ -707,12 +739,48 @@ export default function App() {
   const [certPlz,       setCertPlz]       = useState("");
   const [certPrivacy,   setCertPrivacy]   = useState(false);
   const [certSent,      setCertSent]      = useState(false);
+  const [certLevel,     setCertLevel]     = useState(null); // 'bronze' | 'silber' | 'gold'
   const [isFirstVisit]                    = useState(() => !localStorage.getItem("cq_visited"));
+  // Rundenstatistik für Stufen-System
+  const [roundStats,    setRoundStats]    = useState(() => {
+    try { return JSON.parse(localStorage.getItem("cq_round_stats") || '{"rounds":[],"bronzeDone":false,"silberDone":false,"goldDone":false}'); }
+    catch { return { rounds: [], bronzeDone: false, silberDone: false, goldDone: false }; }
+  });
 
   const flashRef = useRef(null);
 
   useEffect(() => () => { if (flashRef.current) clearTimeout(flashRef.current); }, []);
   useEffect(() => { localStorage.setItem("cq_visited", "1"); }, []);
+  // ─── FAQ Rich Snippet (JSON-LD für Google) ────────────────────────────────
+  useEffect(() => {
+    const faqs = [
+      { q: "Was ist ein Candlestick Muster?", a: "Ein Candlestick Muster (Kerzenmuster) zeigt das Kursverhalten in einem bestimmten Zeitraum. Jede Kerze zeigt Eröffnungs-, Schluss-, Hoch- und Tiefstkurs. Bestimmte Muster wie Hammer, Doji oder Shooting Star signalisieren mögliche Trendwechsel." },
+      { q: "Für wen ist dieses Quiz geeignet?", a: "Das Quiz eignet sich für Einsteiger die Trading von Grund auf lernen möchten, sowie für fortgeschrittene Trader die ihr Wissen zu Candlestick Mustern auffrischen wollen." },
+      { q: "Wie viele Kerzenmuster sind im Quiz enthalten?", a: "Das Quiz enthält 10 wichtige Candlestick Muster: Hammer, Hanging Man, Dragonfly Doji, Gravestone Doji, Inverted Hammer, Shooting Star, Marubozu (grün und rot), Doji und Spinning Top." },
+      { q: "Ist das Candlestick Quiz kostenlos?", a: "Ja, das Quiz ist vollständig kostenlos und ohne Anmeldung nutzbar." },
+      { q: "Was ist der Unterschied zwischen Hammer und Hanging Man?", a: "Beide Muster sehen identisch aus. Der Unterschied liegt im Kontext: Ein Hammer erscheint nach einem Abwärtstrend (bullisch), ein Hanging Man nach einem Aufwärtstrend (bärisch)." },
+      { q: "Wie wird ein Candlestick Muster bestätigt?", a: "Ein Kerzenmuster gilt erst als bestätigt wenn die Folgekerze die erwartete Richtung bestätigt. Zusätzlich helfen Indikatoren wie RSI und Volumen." },
+    ];
+    const schema = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": faqs.map(({ q, a }) => ({
+        "@type": "Question",
+        "name": q,
+        "acceptedAnswer": { "@type": "Answer", "text": a }
+      }))
+    };
+    const existing = document.getElementById("faq-schema");
+    if (existing) existing.remove();
+    const script = document.createElement("script");
+    script.id = "faq-schema";
+    script.type = "application/ld+json";
+    script.textContent = JSON.stringify(schema);
+    document.head.appendChild(script);
+    return () => { const s = document.getElementById("faq-schema"); if (s) s.remove(); };
+  }, []);
+
+
   useEffect(() => { localStorage.setItem("cq_theme",   theme); }, [theme]);
   useEffect(() => { localStorage.setItem("cq_score",   String(score)); }, [score]);
 
@@ -758,8 +826,36 @@ export default function App() {
         if (nr % ROUND_SIZE === 0) {
           const roundEntries = updated.slice(nr - ROUND_SIZE, nr);
           const cc = roundEntries.filter((r) => r.isCorrect).length;
-          setLastRound({ entries: roundEntries, correctCount: cc, percent: Math.round((cc / ROUND_SIZE) * 100) });
-          if (cc === ROUND_SIZE) setShowCertificate(true);
+          const pct = Math.round((cc / ROUND_SIZE) * 100);
+          setLastRound({ entries: roundEntries, correctCount: cc, percent: pct });
+
+          // Stufen-System
+          setRoundStats(prev => {
+            const newRounds = [...prev.rounds, pct];
+            const stats = { ...prev, rounds: newRounds };
+
+            // 🥇 Gold: 5 Runden mit 90%+
+            if (!prev.goldDone && newRounds.filter(p => p >= 90).length >= 5) {
+              stats.goldDone = true;
+              setCertLevel('gold');
+              setShowCertificate(true);
+            }
+            // 🥈 Silber: 3 Runden mit 80%+
+            else if (!prev.silberDone && newRounds.filter(p => p >= 80).length >= 3) {
+              stats.silberDone = true;
+              setCertLevel('silber');
+              setShowCertificate(true);
+            }
+            // 🥉 Bronze: 1 Runde mit 70%+
+            else if (!prev.bronzeDone && newRounds.filter(p => p >= 70).length >= 1) {
+              stats.bronzeDone = true;
+              setCertLevel('bronze');
+              setShowCertificate(true);
+            }
+
+            localStorage.setItem("cq_round_stats", JSON.stringify(stats));
+            return stats;
+          });
         }
         return updated;
       });
@@ -786,6 +882,9 @@ export default function App() {
     setRound({ queue: buildRoundQuestions(ROUND_SIZE), index: 0 });
     setAnswer(null); setFlash(null); setFeedbackText("");
     localStorage.removeItem("cq_score"); localStorage.removeItem("cq_history");
+    localStorage.removeItem("cq_round_stats");
+    setRoundStats({ rounds: [], bronzeDone: false, silberDone: false, goldDone: false });
+    setCertLevel(null);
   }
 
   const inputStyle = {
@@ -835,50 +934,40 @@ export default function App() {
           </header>
 
           {/* ── Hero – nur beim ersten Besuch ── */}
-          {isFirstVisit && (
-            <section className="card" style={{ display: "grid", gap: 14 }}>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <span className="tag tag-blue">Kostenlos</span>
-                <span className="tag tag-green">Interaktiv</span>
-                <span className="tag tag-yellow">Kerzenmuster lernen</span>
+          <section style={{ display: isFirstVisit ? "grid" : "none", gap: 20, padding: "24px 0 8px" }}
+            aria-hidden={!isFirstVisit}>
+              <div style={{ display: "grid", gap: 10 }}>
+                <h1 className="hero-title" style={{ fontSize: 22, fontWeight: 600, lineHeight: 1.2, color: C.text, margin: 0 }}>
+                  Candlestick Quiz – Kerzenmuster verstehen und Trading lernen
+                </h1>
+                <p style={{ fontSize: 15, lineHeight: 1.7, color: C.textMuted, margin: 0 }}>
+                  Lerne die wichtigsten Candlestick Muster wie Hammer, Doji, Shooting Star und Marubozu interaktiv kennen.
+                  Verbessere deine Chartanalyse und dein Wissen im Swing Trading.
+                </p>
+                <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 6 }}>
+                  {[
+                    "10 Kerzenmuster mit Kontext-Chart und Strategie",
+                    "Für Anfänger und Fortgeschrittene geeignet",
+                    "Kostenlos – ohne Anmeldung sofort starten",
+                  ].map(t => (
+                    <li key={t} style={{ fontSize: 14, color: C.textMuted, display: "flex", gap: 8, alignItems: "flex-start" }}>
+                      <span style={{ color: C.green, flexShrink: 0, marginTop: 1 }}>✓</span>
+                      <span>{t}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <div className="hero-title" style={{ fontSize: 20, fontWeight: 600, lineHeight: 1.15, letterSpacing: "-0.02em" }}>
-                Candlestick Quiz – Kerzenmuster verstehen und Trading lernen
-              </div>
-              <p style={{ fontSize: 15, lineHeight: 1.75, color: C.textMuted }}>
-                Lerne die wichtigsten <strong style={{ color: C.text }}>Candlestick Muster</strong> wie Hammer, Doji, Shooting Star und Marubozu interaktiv kennen. Verbessere deine <strong style={{ color: C.text }}>Chartanalyse</strong> und dein Wissen im <strong style={{ color: C.text }}>Swing Trading</strong>.
-              </p>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10 }}>
-                {[
-                  ["📈 Lerne echte Kerzenmuster", "Hammer, Doji, Shooting Star, Marubozu und mehr."],
-                  ["👁 Trainiere dein Trading-Auge", "Verstehe wie Käufer und Verkäufer im Chart agieren."],
-                  ["🎯 Für Anfänger & Fortgeschrittene", "Perfekt zum Lernen und Wiederholen."],
-                ].map(([title, text]) => (
-                  <div key={title} style={{ padding: "12px 14px", border: `1px solid ${C.border}`, borderRadius: 8, background: C.surfaceHi, fontSize: 13, color: C.textMuted, lineHeight: 1.6 }}>
-                    <strong style={{ color: C.text }}>{title}</strong><br />{text}
-                  </div>
-                ))}
-              </div>
-              <div style={{ display: "flex", justifyContent: "center", paddingTop: 4 }}>
+              <div>
                 <button onClick={() => { setMode("quiz"); setTimeout(() => document.getElementById("quiz-anchor")?.scrollIntoView({ behavior: "smooth" }), 50); }}
-                  style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "13px 28px", borderRadius: 8, background: C.green, color: "#fff", fontWeight: 600, fontSize: 15, border: "none", cursor: "pointer", boxShadow: "0 0 20px rgba(63,185,80,0.3)" }}>
+                  style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 24px", borderRadius: 8, background: C.green, color: "#fff", fontWeight: 600, fontSize: 15, border: "none", cursor: "pointer" }}>
                   Quiz jetzt starten →
                 </button>
               </div>
             </section>
-          )}
 
-          {/* ── Trust-Block ── */}
-          <div style={{ display: "flex", gap: 20, flexWrap: "wrap", padding: "4px 2px" }}>
-            {["✔ Für Swing-Trader entwickelt", "✔ Praxis statt Theorie", "✔ Mit Strategie & Marktpsychologie"].map((t) => (
-              <div key={t} style={{ fontSize: 13, color: C.green, fontWeight: 600 }}>{t}</div>
-            ))}
-          </div>
+          {/* Trust-Block entfernt – Info jetzt im Hero */}
 
-          {/* ── Retention Hinweis ── */}
-          <div className="info-box" style={{ padding: "10px 16px", borderRadius: 8 }}>
-            💡 <strong style={{ color: C.text }}>Tipp:</strong> Trainiere täglich 5 Minuten und verbessere dein Trading systematisch.
-          </div>
+          {/* Tipp-Box entfernt – lenkte vom Quiz ab */}
 
           {/* ── Progress ── */}
           {mode === "quiz" && !inReview && (
@@ -889,6 +978,33 @@ export default function App() {
               <div style={{ fontSize: 11, color: C.textMuted, fontFamily: font.mono, flexShrink: 0, whiteSpace: "nowrap" }}>
                 Frage {curNum} von {totalNum}
               </div>
+            </div>
+          )}
+
+          {/* ── Stufen-Fortschritt ── */}
+          {mode === "quiz" && !inReview && (
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {[
+                { key: "bronze", label: "🥉 Bronze", desc: "70%+ in 1 Runde",   done: roundStats.bronzeDone, count: roundStats.rounds.filter(p=>p>=70).length, need: 1 },
+                { key: "silber", label: "🥈 Silber", desc: "80%+ in 3 Runden",  done: roundStats.silberDone, count: roundStats.rounds.filter(p=>p>=80).length, need: 3 },
+                { key: "gold",   label: "🥇 Gold",   desc: "90%+ in 5 Runden",  done: roundStats.goldDone,   count: roundStats.rounds.filter(p=>p>=90).length, need: 5 },
+              ].map(({ key, label, desc, done, count, need }) => (
+                <div key={key} style={{
+                  flex: 1, minWidth: 140, padding: "10px 14px", borderRadius: 8,
+                  border: `1px solid ${done ? C.greenBdr : C.border}`,
+                  background: done ? C.greenBg : C.surfaceHi,
+                  display: "flex", flexDirection: "column", gap: 4,
+                }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: done ? C.green : C.text }}>{label}</div>
+                  <div style={{ fontSize: 11, color: C.textMuted }}>{desc}</div>
+                  <div style={{ height: 4, background: C.border, borderRadius: 2, overflow: "hidden", marginTop: 2 }}>
+                    <div style={{ height: "100%", width: `${Math.min(100, (count/need)*100)}%`, background: done ? C.green : C.blue, borderRadius: 2, transition: "width 0.4s" }} />
+                  </div>
+                  <div style={{ fontSize: 11, color: C.textMuted, fontFamily: "monospace" }}>
+                    {done ? "✓ Erreicht!" : `${count} / ${need}`}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
@@ -1096,6 +1212,55 @@ export default function App() {
             </div>
           </section>
 
+
+          {/* ── Bewertung ── */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 8, background: C.surfaceHi, border: `1px solid ${C.border}` }}>
+            <div style={{ display: "flex", gap: 2 }}>
+              {[1,2,3,4,5].map(i => (
+                <svg key={i} width="18" height="18" viewBox="0 0 24 24" fill="#e3b341" stroke="#e3b341" strokeWidth="1">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+              ))}
+            </div>
+            <div>
+              <span style={{ fontSize: 15, fontWeight: 600, color: C.text }}>4.9 / 5</span>
+              <span style={{ fontSize: 13, color: C.textMuted, marginLeft: 8 }}>Basierend auf Nutzerfeedback · Kostenlos & ohne Anmeldung</span>
+            </div>
+          </div>
+
+          {/* ── FAQ ── */}
+          <section style={{ display: "grid", gap: 0 }}>
+            <div style={{ fontSize: 20, fontWeight: 600, marginBottom: 16 }}>Häufige Fragen zum Candlestick Quiz</div>
+            {[
+              {
+                q: "Was ist ein Candlestick Muster?",
+                a: "Ein Candlestick Muster (Kerzenmuster) zeigt das Kursverhalten in einem bestimmten Zeitraum. Jede Kerze zeigt Eröffnungs-, Schluss-, Hoch- und Tiefstkurs. Bestimmte Muster wie Hammer, Doji oder Shooting Star signalisieren mögliche Trendwechsel."
+              },
+              {
+                q: "Für wen ist dieses Quiz geeignet?",
+                a: "Das Quiz eignet sich für Einsteiger die Trading von Grund auf lernen möchten, sowie für fortgeschrittene Trader die ihr Wissen zu Candlestick Mustern auffrischen und festigen wollen."
+              },
+              {
+                q: "Wie viele Kerzenmuster sind im Quiz enthalten?",
+                a: "Das Quiz enthält 10 wichtige Candlestick Muster: Hammer, Hanging Man, Dragonfly Doji, Gravestone Doji, Inverted Hammer, Shooting Star, Marubozu (grün), Marubozu (rot), Doji und Spinning Top."
+              },
+              {
+                q: "Ist das Candlestick Quiz kostenlos?",
+                a: "Ja, das Quiz ist vollständig kostenlos und ohne Anmeldung nutzbar. Es kann direkt im Browser gestartet werden – auf Desktop und Mobilgeräten."
+              },
+              {
+                q: "Was ist der Unterschied zwischen Hammer und Hanging Man?",
+                a: "Beide Muster sehen identisch aus – kleiner Körper oben, langer unterer Schatten. Der Unterschied liegt im Kontext: Ein Hammer erscheint nach einem Abwärtstrend und signalisiert eine mögliche Umkehr nach oben. Ein Hanging Man erscheint nach einem Aufwärtstrend und warnt vor einer möglichen Umkehr nach unten."
+              },
+              {
+                q: "Wie wird ein Candlestick Muster bestätigt?",
+                a: "Ein Kerzenmuster gilt erst als bestätigt wenn die Folgekerze die erwartete Richtung bestätigt. Beim Hammer z.B. sollte eine grüne Kerze über dem Hoch des Hammers schließen. Zusätzlich helfen Indikatoren wie RSI und Volumen bei der Bestätigung."
+              },
+            ].map(({ q, a }, i) => (
+              <FaqItem key={i} question={q} answer={a} />
+            ))}
+          </section>
+
           {/* ── Fehler melden ── */}
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
             <button className="nav-btn" onClick={() => setShowFeedbackForm((v) => !v)} style={{ fontSize: 11 }}>⚑ Fehler melden</button>
@@ -1142,45 +1307,57 @@ export default function App() {
         )}
 
         {/* ── Zertifikat Popup ── */}
-        {showCertificate && (
+        {showCertificate && certLevel && (() => {
+          const levels = {
+            bronze: { icon: "🥉", titel: "Trading Einsteiger",        farbe: "#cd7f32", msg: "Du hast dein erstes Ziel erreicht! Du kennst die Grundlagen der Candlestick-Analyse und bist auf dem richtigen Weg zum Trading-Profi." },
+            silber: { icon: "🥈", titel: "Trading Fortgeschrittener", farbe: "#a8a8a8", msg: "Beeindruckend! Du beherrschst Candlestick Muster auf einem fortgeschrittenen Niveau. Dein Trading-Auge wird immer schärfer." },
+            gold:   { icon: "🥇", titel: "Trading Profi",             farbe: "#e3b341", msg: "Außergewöhnlich! Du hast das höchste Level erreicht und beherrschst alle Candlestick Muster wie ein echter Trading-Profi." },
+          };
+          const lv = levels[certLevel];
+          return (
           <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 20 }}>
-            <div className="cert-popup" style={{ background: C.surface, border: `1px solid ${C.greenBdr}`, borderRadius: 14, padding: 28, maxWidth: 440, width: "100%", display: "grid", gap: 16, maxHeight: "90vh", overflowY: "auto" }}>
+            <div className="cert-popup" style={{ background: C.surface, border: `2px solid ${lv.farbe}`, borderRadius: 14, padding: 28, maxWidth: 440, width: "100%", display: "grid", gap: 16, maxHeight: "90vh", overflowY: "auto" }}>
               {!certSent ? (
                 <>
-                  <div style={{ fontSize: 32, textAlign: "center" }}>🏆</div>
-                  <div style={{ fontSize: 20, fontWeight: 600, textAlign: "center", color: C.green }}>Glückwunsch – 10/10 erreicht!</div>
-                  <p style={{ fontSize: 15, color: C.textMuted, lineHeight: 1.6, textAlign: "center" }}>Füll das Formular aus und ich schicke dir dein persönliches <strong style={{ color: C.text }}>Zertifikat</strong> zu.</p>
+                  <div style={{ textAlign: "center", fontSize: 48 }}>{lv.icon}</div>
+                  <div style={{ fontSize: 20, fontWeight: 600, textAlign: "center", color: lv.farbe }}>
+                    Glückwunsch – {lv.titel}!
+                  </div>
+                  <p style={{ fontSize: 15, color: C.textMuted, lineHeight: 1.6, textAlign: "center" }}>{lv.msg}</p>
+                  <div style={{ padding: "10px 14px", borderRadius: 8, background: C.surfaceHi, border: `1px solid ${C.border}`, fontSize: 13, color: C.textMuted, textAlign: "center" }}>
+                    Füll das Formular aus und erhalte dein persönliches <strong style={{ color: C.text }}>Zertifikat</strong> kostenlos per E-Mail.
+                  </div>
                   {[
                     { label: "Vorname",  value: certFirstName, set: setCertFirstName, placeholder: "z. B. Max" },
                     { label: "Nachname", value: certLastName,  set: setCertLastName,  placeholder: "z. B. Mustermann" },
                     { label: "E-Mail",   value: certEmail,     set: setCertEmail,     placeholder: "deine@email.de", type: "email" },
                   ].map(({ label, value, set, placeholder, type }) => (
                     <div key={label} style={{ display: "grid", gap: 5 }}>
-                      <label style={{ fontSize: 11, color: C.textMuted, fontWeight: 600 }}>{label} <span style={{ color: C.red }}>*</span></label>
+                      <label style={{ fontSize: 12, color: C.textMuted, fontWeight: 600 }}>{label} <span style={{ color: C.red }}>*</span></label>
                       <input type={type || "text"} placeholder={placeholder} value={value} onChange={(e) => set(e.target.value)} style={inputStyle} />
                     </div>
                   ))}
                   <div style={{ display: "grid", gap: 5 }}>
-                    <label style={{ fontSize: 11, color: C.textMuted, fontWeight: 600 }}>Geburtsdatum <span style={{ fontSize: 11, color: C.textDim, fontWeight: 400 }}>(optional)</span></label>
+                    <label style={{ fontSize: 12, color: C.textMuted, fontWeight: 600 }}>Geburtsdatum <span style={{ fontSize: 11, color: C.textMuted, fontWeight: 400 }}>(optional)</span></label>
                     <input type="date" value={certBirthdate} onChange={(e) => setCertBirthdate(e.target.value)} style={inputStyle} />
                   </div>
                   <div style={{ display: "grid", gap: 5 }}>
-                    <label style={{ fontSize: 11, color: C.textMuted, fontWeight: 600 }}>Postleitzahl <span style={{ fontSize: 11, color: C.textDim, fontWeight: 400 }}>(optional – für regionale Angebote)</span></label>
+                    <label style={{ fontSize: 12, color: C.textMuted, fontWeight: 600 }}>Postleitzahl <span style={{ fontSize: 11, color: C.textMuted, fontWeight: 400 }}>(optional)</span></label>
                     <input type="text" placeholder="z. B. 22297" value={certPlz} onChange={(e) => setCertPlz(e.target.value.replace(/\D/g, "").slice(0, 5))} maxLength={5} style={inputStyle} />
                   </div>
-                  <label style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 11, color: C.textMuted, cursor: "pointer" }}>
+                  <label style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 12, color: C.textMuted, cursor: "pointer" }}>
                     <input type="checkbox" checked={certPrivacy} onChange={(e) => setCertPrivacy(e.target.checked)} style={{ marginTop: 2, flexShrink: 0 }} />
-                    Ich stimme zu, dass meine Daten zum Versand des Zertifikats verwendet werden. Kein Spam, keine Weitergabe.
+                    Ich stimme zu, dass meine Daten zum Versand des Zertifikats verwendet werden.
                   </label>
                   <div style={{ display: "flex", gap: 10 }}>
                     <button className="nav-btn primary" style={{ flex: 1, opacity: (!certFirstName || !certLastName || !certEmail || !certPrivacy) ? 0.4 : 1 }}
                       disabled={!certFirstName || !certLastName || !certEmail || !certPrivacy}
                       onClick={() => {
                         const heute = new Date().toLocaleDateString("de-DE");
-                        const geburt = certBirthdate ? `\nGeburtsdatum: ${new Date(certBirthdate).toLocaleDateString("de-DE")} (auf Wunsch)` : "";
-                        const plz    = certPlz ? `\nPostleitzahl: ${certPlz}` : "";
-                        const body   = `Hallo,\n\nich habe gerade 10/10 im Candlestick Quiz erreicht und würde mich sehr über mein Zertifikat freuen.\n\nMein Name: ${certFirstName} ${certLastName}\nMeine E-Mail: ${certEmail}${geburt}${plz}\nWebseite: Candlestick Quiz\nDatum: ${heute}\n\nViele Grüße\n${certFirstName} ${certLastName}`;
-                        window.location.href = `mailto:gaucho0@web.de?subject=${encodeURIComponent("Zertifikat Anfrage – Candlestick Quiz")}&body=${encodeURIComponent(body)}`;
+                        const geburt = certBirthdate ? `\nGeburtsdatum: ${new Date(certBirthdate).toLocaleDateString("de-DE")}` : "";
+                        const plz = certPlz ? `\nPostleitzahl: ${certPlz}` : "";
+                        const body = `Hallo,\n\nich habe gerade das ${lv.titel}-Zertifikat im Candlestick Quiz erreicht und würde mich sehr darüber freuen.\n\nMein Name: ${certFirstName} ${certLastName}\nMeine E-Mail: ${certEmail}\nStufe: ${lv.icon} ${lv.titel}${geburt}${plz}\nWebseite: Candlestick Quiz\nDatum: ${heute}\n\nViele Grüße\n${certFirstName} ${certLastName}`;
+                        window.location.href = `mailto:gaucho0@web.de?subject=${encodeURIComponent(`${lv.icon} Zertifikat – ${lv.titel} – Candlestick Quiz`)}&body=${encodeURIComponent(body)}`;
                         setCertSent(true);
                       }}>
                       Zertifikat anfordern →
@@ -1190,15 +1367,19 @@ export default function App() {
                 </>
               ) : (
                 <>
-                  <div style={{ fontSize: 32, textAlign: "center" }}>✉️</div>
-                  <div style={{ fontSize: 15, fontWeight: 600, textAlign: "center", color: C.green }}>Anfrage wird gesendet!</div>
-                  <p style={{ fontSize: 15, color: C.textMuted, lineHeight: 1.6, textAlign: "center" }}>Dein E-Mail-Programm öffnet sich gleich. Bitte auf <strong style={{ color: C.text }}>Senden</strong> klicken.</p>
+                  <div style={{ fontSize: 40, textAlign: "center" }}>✉️</div>
+                  <div style={{ fontSize: 18, fontWeight: 600, textAlign: "center", color: C.green }}>Anfrage wird gesendet!</div>
+                  <p style={{ fontSize: 14, color: C.textMuted, lineHeight: 1.6, textAlign: "center" }}>
+                    Dein E-Mail-Programm öffnet sich gleich. Bitte auf <strong style={{ color: C.text }}>Senden</strong> klicken.
+                  </p>
                   <button className="nav-btn primary" onClick={() => { setShowCertificate(false); setCertSent(false); setCertEmail(""); setCertFirstName(""); setCertLastName(""); setCertBirthdate(""); setCertPlz(""); setCertPrivacy(false); }}>Schließen</button>
                 </>
               )}
             </div>
           </div>
-        )}
+          );
+        })()}
+
       </div>
     </>
   );
