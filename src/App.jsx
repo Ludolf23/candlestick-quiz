@@ -168,7 +168,7 @@ const GlobalStyle = ({ theme }) => {
       .hint-box { padding: 10px 14px; border-radius: 8px; background: ${c.yellowBg}; border: 1px solid ${c.yellowBdr}; font-size: 13px; color: ${c.yellow}; }
 
       /* ── Score-Badge ── */
-      .score-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 6px; border: 1px solid ${c.border}; background: ${c.surfaceHi}; font-family: ${font.mono}; font-size: 13px; color: ${c.textMuted}; }
+      .score-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 6px; border: 1px solid ${c.border}; background: ${c.surfaceHi}; font-family: ${font.sans}; font-size: 13px; color: ${c.textMuted}; }
       .score-badge span { color: ${c.green}; font-weight: 600; }
 
       /* ── Flashcard ── */
