@@ -1,1093 +1,622 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
+// ── Tokens ──────────────────────────────────────────────────────────────────
+const DARK={bg:"#0d1117",surface:"#161b22",surfaceHi:"#1c2333",border:"#30363d",borderHi:"#484f58",text:"#e6edf3",textMuted:"#7d8590",textDim:"#484f58",green:"#3fb950",greenBg:"#0d2216",greenBdr:"#238636",red:"#f85149",redBg:"#2d1318",redBdr:"#da3633",yellow:"#e3b341",yellowBg:"#2b2006",yellowBdr:"#9e6a03",blue:"#58a6ff",blueBg:"#0c1929",blueBdr:"#1f6feb"};
+const LIGHT={bg:"#f6f8fa",surface:"#ffffff",surfaceHi:"#f0f2f5",border:"#d0d7de",borderHi:"#afb8c1",text:"#1f2328",textMuted:"#57606a",textDim:"#afb8c1",green:"#1a7f37",greenBg:"#dafbe1",greenBdr:"#82e09a",red:"#cf222e",redBg:"#ffebe9",redBdr:"#ff8182",yellow:"#9a6700",yellowBg:"#fff8c5",yellowBdr:"#d4a72c",blue:"#0969da",blueBg:"#ddf4ff",blueBdr:"#54aeff"};
+const font={mono:"'JetBrains Mono',monospace",sans:"'IBM Plex Sans','Segoe UI',system-ui,sans-serif"};
+let C=LIGHT;
+function setTok(t){C=t==="light"?LIGHT:DARK;}
 
-// ─── Design Tokens ─────────────────────────────────────────────────────────
-const DARK = {
-  bg:        "#0d1117",
-  surface:   "#161b22",
-  surfaceHi: "#1c2333",
-  border:    "#30363d",
-  borderHi:  "#484f58",
-  text:      "#e6edf3",
-  textMuted: "#7d8590",
-  textDim:   "#484f58",
-  green:     "#3fb950",
-  greenBg:   "#0d2216",
-  greenBdr:  "#238636",
-  red:       "#f85149",
-  redBg:     "#2d1318",
-  redBdr:    "#da3633",
-  yellow:    "#e3b341",
-  yellowBg:  "#2b2006",
-  yellowBdr: "#9e6a03",
-  blue:      "#58a6ff",
-  blueBg:    "#0c1929",
-  blueBdr:   "#1f6feb",
-  purple:    "#bc8cff",
-  accent:    "#f0b429",
+const storage={get:k=>{try{return localStorage.getItem(k);}catch{return null;}},set:(k,v)=>{try{localStorage.setItem(k,v);}catch{}},remove:k=>{try{localStorage.removeItem(k);}catch{}}};
+
+// ── CSS ──────────────────────────────────────────────────────────────────────
+const GlobalStyle=({theme})=>{
+  setTok(theme);const c=theme==="light"?LIGHT:DARK;
+  return <style>{`
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap');
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{background:${c.bg};color:${c.text};font-family:${font.sans};font-size:15px;line-height:1.6}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes flashG{0%{background:${c.greenBg}}100%{background:transparent}}
+    @keyframes flashR{0%{background:${c.redBg}}100%{background:transparent}}
+    @keyframes pulse{0%,100%{box-shadow:0 0 0 0 ${c.blue}55}50%{box-shadow:0 0 0 6px ${c.blue}00}}
+    .flash-green{animation:flashG .4s ease forwards}
+    .flash-red{animation:flashR .4s ease forwards}
+    ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:${c.bg}}::-webkit-scrollbar-thumb{background:${c.border};border-radius:3px}
+    .choice-btn{width:100%;padding:11px 14px;border-radius:6px;border:1.5px solid ${c.border};background:${c.surface};color:${c.text};font-family:${font.sans};font-size:13px;text-align:left;cursor:pointer;transition:border-color .15s,background .15s,transform .1s;display:flex;align-items:flex-start;gap:10px;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+    .choice-btn:hover:not(:disabled){border-color:${c.blue};background:${c.blueBg};transform:translateX(2px)}
+    .choice-btn:disabled{cursor:default}
+    .choice-btn.correct{border-color:${c.greenBdr};background:${c.greenBg};color:${c.green}}
+    .choice-btn.wrong{border-color:${c.redBdr};background:${c.redBg};color:${c.red}}
+    .choice-btn.dimmed{opacity:.35}
+    .choice-btn .badge{flex-shrink:0;width:20px;height:20px;border-radius:4px;border:1px solid ${c.borderHi};background:${c.surfaceHi};display:flex;align-items:center;justify-content:center;font-family:${font.mono};font-size:11px;color:${c.textMuted};margin-top:1px}
+    .choice-btn.correct .badge{background:${c.greenBdr};border-color:${c.green};color:#fff}
+    .choice-btn.wrong .badge{background:${c.redBdr};border-color:${c.red};color:#fff}
+    .nav-btn{padding:6px 13px;border-radius:6px;border:1.5px solid ${c.borderHi};background:${c.surface};color:${c.text};font-family:${font.sans};font-size:13px;cursor:pointer;transition:border-color .15s,color .15s,background .15s;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+    .nav-btn:hover{border-color:${c.blue};color:${c.blue};background:${c.blueBg}}
+    .nav-btn.active{border-color:${c.blue};color:${c.blue};background:${c.blueBg};font-weight:600}
+    .nav-btn.primary{border-color:${c.greenBdr};color:${c.green};background:${c.greenBg};font-weight:600}
+    .nav-btn.primary:hover{border-color:${c.green}}
+    .nav-btn.danger{border-color:${c.redBdr};color:${c.red};background:${c.redBg};font-weight:600}
+    .nav-btn.secondary{border-color:${c.blueBdr};color:${c.blue};background:${c.blueBg};font-weight:600}
+    .nav-btn.muted{border-color:${c.border};color:${c.textMuted};background:${c.surfaceHi};font-size:11px}
+    .nav-btn.muted:hover{border-color:${c.borderHi};color:${c.text}}
+    .cta-btn{display:inline-flex;align-items:center;gap:8px;padding:13px 28px;border-radius:8px;background:${c.green};color:#fff;font-weight:700;font-size:15px;border:none;cursor:pointer;box-shadow:0 4px 14px rgba(63,185,80,.4);transition:opacity .15s,transform .15s}
+    .cta-btn:hover{opacity:.9;transform:translateY(-2px)}
+    .card{background:${c.surface};border:1.5px solid ${c.border};border-radius:10px;padding:20px;animation:fadeIn .2s ease forwards}
+    .quiz-card{background:${c.surface};border:1.5px solid ${c.blue}33;border-radius:10px;padding:20px;animation:fadeIn .2s ease forwards;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+    .tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-family:${font.mono}}
+    .tag-green{background:${c.greenBg};color:${c.green};border:1px solid ${c.greenBdr}}
+    .tag-red{background:${c.redBg};color:${c.red};border:1px solid ${c.redBdr}}
+    .tag-gray{background:${c.surfaceHi};color:${c.textMuted};border:1px solid ${c.border}}
+    .tag-blue{background:${c.blueBg};color:${c.blue};border:1px solid ${c.blueBdr}}
+    table{border-collapse:collapse;width:100%}
+    th,td{text-align:left;padding:8px 12px;border-bottom:1px solid ${c.border};font-size:13px}
+    th{color:${c.textMuted};font-weight:400;font-family:${font.mono};font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:${c.surfaceHi}}
+    .progress-bar{height:3px;background:${c.border};border-radius:2px;overflow:hidden}
+    .progress-fill{height:100%;background:${c.blue};border-radius:2px;transition:width .4s ease}
+    .reveal-box{padding:16px;border-radius:8px;border:1px solid ${c.border};background:${c.bg};animation:fadeIn .2s ease forwards}
+    .info-box{padding:10px 14px;border-radius:8px;background:${c.surfaceHi};border:1px solid ${c.border};font-size:13px;color:${c.textMuted};line-height:1.6}
+    .score-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:6px;border:1px solid ${c.border};background:${c.surfaceHi};font-size:13px;color:${c.textMuted}}
+    .score-badge span{color:${c.green};font-weight:600}
+    .flash-card{background:${c.surface};border:1px solid ${c.border};border-radius:10px;padding:16px;transition:border-color .2s;animation:fadeIn .2s ease forwards}
+    .flash-card:hover{border-color:${c.borderHi}}
+    *{transition:background-color .2s ease,border-color .2s ease,color .15s ease}
+    button{transition:background-color .15s,border-color .15s,color .1s,transform .1s !important}
+    @media(max-width:600px){.choices-grid{grid-template-columns:1fr !important}.flashcards-grid{grid-template-columns:1fr !important}.info-grid{grid-template-columns:1fr !important}.app-padding{padding:12px 12px 40px !important}.header-nav{gap:6px !important}}
+  `}</style>;
 };
 
-const LIGHT = {
-  bg:        "#f6f8fa",
-  surface:   "#ffffff",
-  surfaceHi: "#f0f2f5",
-  border:    "#d0d7de",
-  borderHi:  "#afb8c1",
-  text:      "#1f2328",
-  textMuted: "#57606a",
-  textDim:   "#afb8c1",
-  green:     "#1a7f37",
-  greenBg:   "#dafbe1",
-  greenBdr:  "#82e09a",
-  red:       "#cf222e",
-  redBg:     "#ffebe9",
-  redBdr:    "#ff8182",
-  yellow:    "#9a6700",
-  yellowBg:  "#fff8c5",
-  yellowBdr: "#d4a72c",
-  blue:      "#0969da",
-  blueBg:    "#ddf4ff",
-  blueBdr:   "#54aeff",
-  purple:    "#8250df",
-  accent:    "#9a6700",
-};
-
-const font = {
-  mono: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace",
-  sans: "'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif",
-};
-
-// C wird dynamisch gesetzt (dark/light) – wird von App.jsx gesteuert
-let C = DARK;
-function setThemeTokens(theme) {
-  C = theme === "light" ? LIGHT : DARK;
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function displayName(c){const n=String(c?.name||""),d=String(c?.deName||"");return d&&d!==n?`${n} (${d})`:n;}
+function isNeutral(t){return String(t||"").toLowerCase().includes("neutral");}
+function colorTag(t){const s=String(t||"").toLowerCase();if(s.includes("bullish"))return"tag-green";if(s.includes("bearish"))return"tag-red";return"tag-gray";}
+function InfoRow({label,value,fullWidth=false}){
+  if(!value)return null;
+  return<div style={{display:"flex",gap:6,alignItems:"baseline",fontSize:13,lineHeight:1.6,gridColumn:fullWidth?"1 / -1":undefined}}><span style={{fontWeight:600,color:C.text,flexShrink:0,whiteSpace:"nowrap"}}>{label}:</span><span style={{color:C.textMuted}}>{value}</span></div>;
 }
 
-
-// ─── Styles & Komponenten ──────────────────────────────────────────────────
-
-// ─── Typografie-System (4 Größen, 2 Gewichte) ─────────────────────────────────
-// 20px  – Seitenüberschriften        fontWeight: 600
-// 15px  – Fließtext, Fragen          fontWeight: 400
-// 13px  – Labels, Buttons, InfoRows  fontWeight: 400 (label: 600)
-// 11px  – Meta, Monospace-Details    fontWeight: 400
-//
-// Farb-Bedeutung (strikt):
-// Blau   → immer klickbar (aktiver Tab, Hover, Links)
-// Grün   → Erfolg + primäre Aktion (CTA, richtige Antwort)
-// Rot    → Fehler / Gefahr (falsche Antwort, Reset)
-// Gelb   → Hinweis / Warnung (Merksätze, Review-Banner)
-// Grau   → alles andere (Boxen, Hintergründe, neutrale Info)
-
-const GlobalStyle = ({ theme }) => {
-  setThemeTokens(theme);
-  const c = theme === "light" ? LIGHT : DARK;
-  return (
-    <style>{`
-      @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap');
-      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-      body { background: ${c.bg}; color: ${c.text}; font-family: ${font.sans}; font-size: 15px; line-height: 1.6; }
-      ::selection { background: ${c.blue}33; color: ${c.text}; }
-      ::-webkit-scrollbar { width: 6px; height: 6px; }
-      ::-webkit-scrollbar-track { background: ${c.bg}; }
-      ::-webkit-scrollbar-thumb { background: ${c.border}; border-radius: 3px; }
-
-      @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
-      @keyframes flashGreen { 0% { background:${c.greenBg}; } 100% { background:transparent; } }
-      @keyframes flashRed   { 0% { background:${c.redBg};   } 100% { background:transparent; } }
-      .flash-green { animation: flashGreen 0.4s ease forwards; }
-      .flash-red   { animation: flashRed   0.4s ease forwards; }
-
-      /* ── Antwort-Buttons ── */
-      .choice-btn {
-        width: 100%; padding: 11px 14px; border-radius: 6px;
-        border: 1.5px solid ${c.border}; background: ${c.surface};
-        color: ${c.text}; font-family: ${font.sans}; font-size: 13px;
-        line-height: 1.5; text-align: left; cursor: pointer;
-        transition: border-color 0.15s, background 0.15s, transform 0.1s, box-shadow 0.15s;
-        display: flex; align-items: flex-start; gap: 10px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.12);
-      }
-      .choice-btn:hover:not(:disabled) { border-color: ${c.blue}; background: ${c.blueBg}; transform: translateX(2px); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-      .choice-btn:disabled { cursor: default; }
-      .choice-btn.correct { border-color: ${c.greenBdr}; background: ${c.greenBg}; color: ${c.green}; }
-      .choice-btn.wrong   { border-color: ${c.redBdr};   background: ${c.redBg};   color: ${c.red};   }
-      .choice-btn.dimmed  { opacity: 0.35; }
-      .choice-btn .badge {
-        flex-shrink: 0; width: 20px; height: 20px; border-radius: 4px;
-        border: 1px solid ${c.borderHi}; background: ${c.surfaceHi};
-        display: flex; align-items: center; justify-content: center;
-        font-family: ${font.mono}; font-size: 11px; color: ${c.textMuted}; margin-top: 1px;
-      }
-      .choice-btn.correct .badge { background: ${c.greenBdr}; border-color: ${c.green}; color: #fff; }
-      .choice-btn.wrong   .badge { background: ${c.redBdr};   border-color: ${c.red};   color: #fff; }
-
-      /* ── Nav-Buttons: Blau = aktiv/klickbar ── */
-      .nav-btn {
-        padding: 6px 13px; border-radius: 6px; border: 1.5px solid ${c.border};
-        background: ${c.surface}; color: ${c.textMuted}; font-family: ${font.sans};
-        font-size: 13px; font-weight: 400; cursor: pointer;
-        transition: border-color 0.15s, color 0.15s, background 0.15s, box-shadow 0.15s;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-      }
-      .nav-btn:hover   { border-color: ${c.blue}; color: ${c.blue}; background: ${c.blueBg}; }
-      .nav-btn.active  { border-color: ${c.blue}; color: ${c.blue}; background: ${c.blueBg}; }
-      .nav-btn.primary { border-color: ${c.greenBdr}; color: ${c.green}; background: ${c.greenBg}; font-weight: 600; }
-      .nav-btn.primary:hover { border-color: ${c.green}; }
-      .nav-btn.danger  { border-color: ${c.redBdr}; color: ${c.red}; background: ${c.redBg}; }
-
-      /* ── Karten ── */
-      .card { background: ${c.surface}; border: 1.5px solid ${c.border}; border-radius: 10px; padding: 20px; animation: fadeIn 0.2s ease forwards; }
-      .quiz-card { background: ${c.surface}; border: 1.5px solid ${c.blue}33; border-radius: 10px; padding: 20px; animation: fadeIn 0.2s ease forwards; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
-
-      /* ── Tags: nur für Status-Info, nicht klickbar ── */
-      .tag { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-family: ${font.mono}; letter-spacing: 0.02em; font-weight: 400; }
-      .tag-green  { background: ${c.greenBg};   color: ${c.green};    border: 1px solid ${c.greenBdr}; }
-      .tag-red    { background: ${c.redBg};     color: ${c.red};      border: 1px solid ${c.redBdr};   }
-      .tag-gray   { background: ${c.surfaceHi}; color: ${c.textMuted}; border: 1px solid ${c.border};  }
-      .tag-yellow { background: ${c.yellowBg};  color: ${c.yellow};   border: 1px solid ${c.yellowBdr}; }
-      .tag-blue   { background: ${c.blueBg};    color: ${c.blue};     border: 1px solid ${c.blueBdr};  }
-
-      /* ── Tabelle ── */
-      table { border-collapse: collapse; width: 100%; }
-      th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid ${c.border}; font-size: 13px; }
-      th { color: ${c.textMuted}; font-weight: 400; font-family: ${font.mono}; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
-      tr:last-child td { border-bottom: none; }
-      tr:hover td { background: ${c.surfaceHi}; }
-
-      /* ── Fortschritt ── */
-      .progress-bar  { height: 3px; background: ${c.border}; border-radius: 2px; overflow: hidden; }
-      .progress-fill { height: 100%; background: ${c.blue}; border-radius: 2px; transition: width 0.4s ease; }
-
-      /* ── Auflösungsbox (grau, kein Blau) ── */
-      .reveal-box { padding: 16px; border-radius: 8px; border: 1px solid ${c.border}; background: ${c.bg}; animation: fadeIn 0.2s ease forwards; }
-
-      /* ── Info-Box (neutral grau statt blau) ── */
-      .info-box { padding: 10px 14px; border-radius: 8px; background: ${c.surfaceHi}; border: 1px solid ${c.border}; font-size: 13px; color: ${c.textMuted}; line-height: 1.6; }
-
-      /* ── Hinweis-Box (gelb, nur für Merksätze/Warnungen) ── */
-      .hint-box { padding: 10px 14px; border-radius: 8px; background: ${c.yellowBg}; border: 1px solid ${c.yellowBdr}; font-size: 13px; color: ${c.yellow}; }
-
-      /* ── Score-Badge ── */
-      .score-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 6px; border: 1px solid ${c.border}; background: ${c.surfaceHi}; font-family: ${font.sans}; font-size: 13px; color: ${c.textMuted}; }
-      .score-badge span { color: ${c.green}; font-weight: 600; }
-
-      /* ── Flashcard ── */
-      .flash-card { background: ${c.surface}; border: 1px solid ${c.border}; border-radius: 10px; padding: 16px; transition: border-color 0.2s; animation: fadeIn 0.2s ease forwards; }
-      .flash-card:hover { border-color: ${c.borderHi}; }
-
-      .divider { height: 1px; background: ${c.border}; margin: 12px 0; }
-      .mono { font-family: ${font.mono}; font-size: 11px; }
-
-      * { transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease; }
-      button { transition: background-color 0.15s ease, border-color 0.15s ease, color 0.1s ease, transform 0.1s ease !important; }
-
-      @media (max-width: 600px) {
-        .choices-grid    { grid-template-columns: 1fr !important; }
-        .flashcards-grid { grid-template-columns: 1fr !important; }
-        .info-grid       { grid-template-columns: 1fr !important; }
-        .hero-title      { font-size: 18px !important; }
-        .header-nav      { gap: 6px !important; }
-        .app-padding     { padding: 12px 12px 40px !important; }
-        .cert-popup      { padding: 20px 16px !important; }
-      }
-    `}</style>
-  );
-};
-
-// ─── Mini Candle SVG ──────────────────────────────────────────────────────────
-const VIEW_WIDTH  = 28;
-const VIEW_HEIGHT = 48;
-const SVG_SCALE   = 0.85;
-
-function MiniCandle({ bodyColor="#3fb950", core={top:3,bottom:1,bodyY:2,bodyH:0.5}, padding=4, wickMode="both", wickTopLenPx=null, bodyShiftPx=0, wickBottomTrimPx=0, wickJoinPx=0 }) {
-  const drawable = VIEW_HEIGHT - padding * 2;
-  const mapY = (v) => padding + (1 - v / 3.5) * drawable;
-  const bodyH = Math.max(2, (core.bodyH / 3.5) * drawable);
-  let bodyY = mapY(core.bodyY + core.bodyH) - bodyH;
-  bodyY = Math.max(padding, Math.min(bodyY, VIEW_HEIGHT - padding - bodyH));
-  if (bodyShiftPx) bodyY = Math.max(padding, Math.min(bodyY + bodyShiftPx, VIEW_HEIGHT - padding - bodyH));
-  const bodyTopY = bodyY, bodyBottomY = bodyY + bodyH;
-  let wickY1 = mapY(core.top), wickY2 = mapY(core.bottom);
-  if (wickMode === "both" && wickBottomTrimPx > 0) wickY2 = Math.max(bodyBottomY, wickY2 - wickBottomTrimPx);
-  if (wickMode === "top" && typeof wickTopLenPx === "number") { wickY1 = Math.max(padding, bodyTopY - wickTopLenPx); wickY2 = bodyTopY + (wickJoinPx||0); }
-  else if (wickMode === "top") { wickY2 = bodyTopY + (wickJoinPx||0); }
-  else if (wickMode === "bottom") { wickY1 = bodyBottomY - (wickJoinPx||0); }
-  const strokeCol = bodyColor === "#3fb950" ? "#238636" : bodyColor === "#f85149" ? "#da3633" : "#484f58";
-  return (
-    <svg width={VIEW_WIDTH*SVG_SCALE} height={VIEW_HEIGHT*SVG_SCALE} viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}>
-      {wickMode !== "none" && <line x1="14" x2="14" y1={wickY1} y2={wickY2} stroke="#484f58" strokeWidth="1.5" />}
-      <rect x="8" y={bodyY} width="12" height={bodyH} fill={bodyColor} stroke={strokeCol} strokeWidth="0.5" rx="1.5" />
-    </svg>
-  );
-}
-
-function DragonflyDojiSVG() {
-  return (
-    <svg width={28*SVG_SCALE} height={48*SVG_SCALE} viewBox="0 0 28 48">
-      <line x1="14" x2="14" y1="14" y2="42" stroke="#484f58" strokeWidth="1.5" />
-      <line x1="9"  x2="19" y1="14" y2="14" stroke="#7d8590" strokeWidth="2.5" />
-    </svg>
-  );
-}
-
-function GravestoneDojiSVG({ wickTopLenPx=25 }) {
-  const bodyY = 32, wickTop = Math.max(4, bodyY - wickTopLenPx);
-  return (
-    <svg width={28*SVG_SCALE} height={48*SVG_SCALE} viewBox="0 0 28 48">
-      <line x1="14" x2="14" y1={wickTop} y2={bodyY} stroke="#484f58" strokeWidth="1.5" />
-      <line x1="9"  x2="19" y1={bodyY}  y2={bodyY}  stroke="#7d8590" strokeWidth="2.5" />
-    </svg>
-  );
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-function displayName(candle) {
-  const n = String(candle?.name||""), d = String(candle?.deName||"");
-  return d && d !== n ? `${n} (${d})` : n;
-}
-function isNeutralTyp(typ) { return String(typ||"").toLowerCase().includes("neutral"); }
-function colorTag(typ) {
-  const t = String(typ||"").toLowerCase();
-  if (t.includes("bullish")) return "tag-green";
-  if (t.includes("bearish")) return "tag-red";
-  return "tag-gray";
-}
-
-// ─── InfoRow: Label fett, Wert normal ─────────────────────────────────────────
-function InfoRow({ label, value, fullWidth=false }) {
-  if (!value) return null;
-  return (
-    <div style={{ display:"flex", gap:6, alignItems:"baseline", fontSize:13, lineHeight:1.6, gridColumn: fullWidth ? "1 / -1" : undefined }}>
-      <span style={{ fontWeight:600, color:C.text, flexShrink:0, whiteSpace:"nowrap" }}>{label}:</span>
-      <span style={{ color:C.textMuted }}>{value}</span>
-    </div>
-  );
-}
-
-
-// ─── Kontext-Chart Sequenzen ──────────────────────────────────────────────────
-const GREEN = "#3fb950";
-const RED   = "#f85149";
-const GRAY  = "#7d8590";
-
-function getChartSequence(name) {
-  switch (name) {
-    case "Hammer":
-      return [
-        { high: 110, low: 96,  open: 109, close: 98,  color: RED   },
-        { high: 100, low: 88,  open: 99,  close: 90,  color: RED   },
-        { high: 92,  low: 76,  open: 91,  close: 88,  color: GREEN, signal: true },
-        { high: 94,  low: 86,  open: 88,  close: 93,  color: GREEN },
-      ];
-    case "Hanging Man":
-      return [
-        { high: 92,  low: 82,  open: 83,  close: 91,  color: GREEN },
-        { high: 100, low: 90,  open: 91,  close: 99,  color: GREEN },
-        { high: 101, low: 85,  open: 100, close: 97,  color: RED,   signal: true },
-        { high: 98,  low: 88,  open: 97,  close: 89,  color: RED   },
-      ];
-    case "Inverted Hammer":
-      return [
-        { high: 112, low: 98,  open: 111, close: 100, color: RED   },
-        { high: 102, low: 88,  open: 101, close: 90,  color: RED   },
-        { high: 100, low: 84,  open: 86,  close: 88,  color: GREEN, signal: true },
-        { high: 96,  low: 86,  open: 88,  close: 95,  color: GREEN },
-      ];
-    case "Shooting Star":
-      return [
-        { high: 94,  low: 84,  open: 85,  close: 93,  color: GREEN },
-        { high: 102, low: 91,  open: 93,  close: 101, color: GREEN },
-        { high: 116, low: 99,  open: 101, close: 103, color: RED,   signal: true },
-        { high: 104, low: 94,  open: 103, close: 95,  color: RED   },
-      ];
-    case "Dragonfly Doji":
-      return [
-        { high: 108, low: 95,  open: 107, close: 97,  color: RED   },
-        { high: 99,  low: 85,  open: 98,  close: 87,  color: RED   },
-        { high: 88,  low: 74,  open: 88,  close: 88,  color: GRAY,  signal: true, doji: "dragonfly" },
-        { high: 95,  low: 86,  open: 88,  close: 94,  color: GREEN },
-      ];
-    case "Gravestone Doji":
-      return [
-        { high: 95,  low: 85,  open: 86,  close: 94,  color: GREEN },
-        { high: 104, low: 93,  open: 94,  close: 103, color: GREEN },
-        { high: 116, low: 103, open: 103, close: 103, color: GRAY,  signal: true, doji: "gravestone" },
-        { high: 104, low: 94,  open: 103, close: 95,  color: RED   },
-      ];
-    case "Doji":
-      return [
-        { high: 102, low: 92,  open: 93,  close: 101, color: GREEN },
-        { high: 104, low: 94,  open: 102, close: 96,  color: RED   },
-        { high: 106, low: 92,  open: 99,  close: 99,  color: GRAY,  signal: true, doji: "standard" },
-      ];
-    case "Spinning Top":
-      return [
-        { high: 104, low: 94,  open: 101, close: 97,  color: RED   },
-        { high: 102, low: 92,  open: 93,  close: 100, color: GREEN },
-        { high: 106, low: 90,  open: 98,  close: 100, color: GREEN, signal: true },
-      ];
-    case "Marubozu (grün)":
-      return [
-        { high: 92,  low: 84,  open: 85,  close: 91,  color: GREEN },
-        { high: 100, low: 90,  open: 91,  close: 99,  color: GREEN },
-        { high: 112, low: 100, open: 100, close: 112, color: GREEN, signal: true, marubozu: true },
-        { high: 118, low: 110, open: 112, close: 117, color: GREEN },
-      ];
-    case "Marubozu (rot)":
-      return [
-        { high: 116, low: 106, open: 115, close: 107, color: RED   },
-        { high: 108, low: 98,  open: 107, close: 99,  color: RED   },
-        { high: 100, low: 88,  open: 100, close: 88,  color: RED,   signal: true, marubozu: true },
-        { high: 90,  low: 78,  open: 88,  close: 80,  color: RED   },
-      ];
-    default:
-      return null;
+// ── Kontext-Chart ─────────────────────────────────────────────────────────────
+const GR="#3fb950",RD="#f85149",GY="#7d8590";
+function getSeq(name){
+  switch(name){
+    case"Hammer":return[{h:110,l:96,o:109,c:98,col:RD},{h:100,l:88,o:99,c:90,col:RD},{h:92,l:76,o:91,c:88,col:GR,sig:true},{h:94,l:86,o:88,c:93,col:GR}];
+    case"Inverted Hammer":return[{h:112,l:98,o:111,c:100,col:RD},{h:102,l:88,o:101,c:90,col:RD},{h:100,l:84,o:86,c:88,col:GR,sig:true},{h:96,l:86,o:88,c:95,col:GR}];
+    case"Hanging Man":return[{h:92,l:82,o:83,c:91,col:GR},{h:100,l:90,o:91,c:99,col:GR},{h:101,l:85,o:100,c:97,col:RD,sig:true},{h:98,l:88,o:97,c:89,col:RD}];
+    case"Shooting Star":return[{h:94,l:84,o:85,c:93,col:GR},{h:102,l:91,o:93,c:101,col:GR},{h:116,l:99,o:101,c:103,col:RD,sig:true},{h:104,l:94,o:103,c:95,col:RD}];
+    case"Dragonfly Doji":return[{h:108,l:95,o:107,c:97,col:RD},{h:99,l:85,o:98,c:87,col:RD},{h:88,l:74,o:88,c:88,col:GY,sig:true,doji:true},{h:95,l:86,o:88,c:94,col:GR}];
+    case"Gravestone Doji":return[{h:95,l:85,o:86,c:94,col:GR},{h:104,l:93,o:94,c:103,col:GR},{h:116,l:103,o:103,c:103,col:GY,sig:true,doji:true},{h:104,l:94,o:103,c:95,col:RD}];
+    case"Doji":return[{h:102,l:92,o:93,c:101,col:GR},{h:104,l:94,o:102,c:96,col:RD},{h:106,l:92,o:99,c:99,col:GY,sig:true,doji:true}];
+    case"Spinning Top":return[{h:104,l:94,o:101,c:97,col:RD},{h:102,l:92,o:93,c:100,col:GR},{h:106,l:90,o:98,c:100,col:GR,sig:true}];
+    case"Marubozu (grün)":return[{h:92,l:84,o:85,c:91,col:GR},{h:100,l:90,o:91,c:99,col:GR},{h:112,l:100,o:100,c:112,col:GR,sig:true,maru:true},{h:118,l:110,o:112,c:117,col:GR}];
+    case"Marubozu (rot)":return[{h:116,l:106,o:115,c:107,col:RD},{h:108,l:98,o:107,c:99,col:RD},{h:100,l:88,o:100,c:88,col:RD,sig:true,maru:true},{h:90,l:78,o:88,c:80,col:RD}];
+    default:return null;
   }
 }
-
-// ─── Kontext-Chart ────────────────────────────────────────────────────────────
-function ContextChart({ candle }) {
-  if (!candle) return null;
-  const seq = getChartSequence(candle.name);
-  if (!seq) return null;
-  const W=220, H=90, PAD_Y=8, candleW=14, gap=4;
-  const startX = (W - (seq.length*candleW + (seq.length-1)*gap)) / 2;
-  const allPrices = seq.flatMap(c=>[c.high,c.low]);
-  const priceMin = Math.min(...allPrices);
-  const priceRange = Math.max(...allPrices) - priceMin || 1;
-  const toY = p => PAD_Y + (1-(p-priceMin)/priceRange)*(H-2*PAD_Y);
-  const strokeCol = fill => fill==="#3fb950"?"#238636":fill==="#f85149"?"#da3633":"#6b7280";
-  const markt = String(candle.markt||"").toLowerCase();
-  const trendLabel = markt.includes("aufwärt") ? "↑ Aufwärtstrend" : markt.includes("abwärt") ? "↓ Abwärtstrend" : "↔ Seitwärts";
-  return (
-    <div style={{ marginTop:12 }}>
-      <div style={{ fontSize:11, color:C.textDim, fontFamily:font.mono, textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:6 }}>Kontext-Chart</div>
-      <div style={{ background:C.bg, border:`1px solid ${C.border}`, borderRadius:8, padding:"8px 4px 4px", display:"inline-block" }}>
+function ContextChart({candle}){
+  const seq=getSeq(candle?.name);if(!seq)return null;
+  const W=220,H=90,PY=8,cW=14,gap=4;
+  const sx=(W-(seq.length*cW+(seq.length-1)*gap))/2;
+  const allP=seq.flatMap(c=>[c.h,c.l]);
+  const pMin=Math.min(...allP),pR=Math.max(...allP)-pMin||1;
+  const toY=p=>PY+(1-(p-pMin)/pR)*(H-2*PY);
+  const sc=f=>f===GR?"#238636":f===RD?"#da3633":"#6b7280";
+  const m=String(candle.markt||"").toLowerCase();
+  const tl=m.includes("aufwärt")?"↑ Aufwärtstrend":m.includes("abwärt")?"↓ Abwärtstrend":"↔ Seitwärts";
+  return(
+    <div style={{marginTop:12}}>
+      <div style={{fontSize:11,color:C.textDim,fontFamily:font.mono,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:6}}>Kontext-Chart</div>
+      <div style={{background:C.bg,border:`1px solid ${C.border}`,borderRadius:8,padding:"8px 4px 4px",display:"inline-block"}}>
         <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}>
-          {seq.map((c,i) => {
-            const cx=startX+i*(candleW+gap)+candleW/2, x=startX+i*(candleW+gap);
-            const yHigh=toY(c.high), yLow=toY(c.low), yOpen=toY(c.open), yClose=toY(c.close);
-            const yTop=Math.min(yOpen,yClose), yBot=Math.max(yOpen,yClose);
-            const bodyH=Math.max(1.5,yBot-yTop);
-            return (
-              <g key={i}>
-                {c.signal && <rect x={x-3} y={yHigh-4} width={candleW+6} height={yLow-yHigh+8} rx={3} fill={`${C.yellow}12`} stroke={C.yellow} strokeWidth="1" />}
-                {!c.marubozu && <line x1={cx} x2={cx} y1={yHigh} y2={yTop}  stroke="#484f58" strokeWidth="1.5" strokeLinecap="round" />}
-                {!c.marubozu && <line x1={cx} x2={cx} y1={yBot}  y2={yLow}  stroke="#484f58" strokeWidth="1.5" strokeLinecap="round" />}
-                {c.doji
-                  ? <line x1={x+2} x2={x+candleW-2} y1={yTop} y2={yTop} stroke="#7d8590" strokeWidth="2" strokeLinecap="round" />
-                  : <rect x={x+1} y={yTop} width={candleW-2} height={bodyH} fill={c.color} stroke={strokeCol(c.color)} strokeWidth="0.5" rx="1" />
-                }
-              </g>
-            );
+          {seq.map((c,i)=>{
+            const cx=sx+i*(cW+gap)+cW/2,x=sx+i*(cW+gap);
+            const yH=toY(c.h),yL=toY(c.l),yO=toY(c.o),yC=toY(c.c);
+            const yT=Math.min(yO,yC),yB=Math.max(yO,yC),bH=Math.max(1.5,yB-yT);
+            return(<g key={i}>
+              {c.sig&&<rect x={x-3} y={yH-4} width={cW+6} height={yL-yH+8} rx={3} fill={`${C.yellow}12`} stroke={C.yellow} strokeWidth="1"/>}
+              {!c.maru&&<line x1={cx} x2={cx} y1={yH} y2={yT} stroke="#484f58" strokeWidth="1.5" strokeLinecap="round"/>}
+              {!c.maru&&<line x1={cx} x2={cx} y1={yB} y2={yL} stroke="#484f58" strokeWidth="1.5" strokeLinecap="round"/>}
+              {c.doji?<line x1={x+2} x2={x+cW-2} y1={yT} y2={yT} stroke="#7d8590" strokeWidth="2" strokeLinecap="round"/>
+                     :<rect x={x+1} y={yT} width={cW-2} height={bH} fill={c.col} stroke={sc(c.col)} strokeWidth="0.5" rx="1"/>}
+            </g>);
           })}
         </svg>
-        <div style={{ fontSize:11, color:C.textDim, fontFamily:font.mono, paddingLeft:6, paddingBottom:2 }}>{trendLabel}</div>
+        <div style={{fontSize:11,color:C.textDim,fontFamily:font.mono,paddingLeft:6,paddingBottom:2}}>{tl}</div>
       </div>
     </div>
   );
 }
 
-
-// ─── Kerzenmuster-Daten ────────────────────────────────────────────────────
-// ─── Kerzenmuster-Daten ───────────────────────────────────────────────────────
-const candles = [
-  {
-    name: "Hammer",
-    deName: "Hammer",
-    merk: "Abverkauf wird gekauft – Käufer übernehmen.",
-    color: "green",
-    typ: "Bullish Reversal",
-    markt: "Abwärtstrend",
-    erklaerung: "Hammer signalisiert nach Abwärtstrend eine Abwehr der Verkäufer. Lange Lunte unten = Kaufdruck kommt zurück. Gute Bestätigung: grüne Folgekerze + Volumen.",
-    psychologie: "Verkäufer in Panik, Käufer übernehmen.",
-    intraday: "Zu Beginn dominieren die Verkäufer und drücken den Kurs tiefer. Im Verlauf werden die Tiefs aggressiv gekauft, der Kurs erholt sich deutlich vom Tagestief.",
-    beschreibung: "Kleiner Körper, langer unterer Schatten.",
-    bedeutung: "Käufer drehen den Markt – Bodenbildung.",
-    bestaetigung: "Grüne Folgekerze, RSI steigt, Volumen stabil.",
-    strategie: "Einstieg erst nach Bestätigung: grüne Folgekerze über dem Hammer-Hoch. Stop unter das Tief der Lunte, Ziel: nächster Widerstand oder MA20.",
-    wirkung: "2–3",
-    staerke: 5,
-    svg: () => <svg width={24} height={41} viewBox="0 0 28 48"><line x1="14" x2="14" y1="8" y2="42" stroke="#484f58" strokeWidth="1.5"/><rect x="8" y="16" width="12" height="8" fill="#3fb950" stroke="#238636" strokeWidth="0.5" rx="1.5"/></svg>,
-  },
-  {
-    name: "Inverted Hammer",
-    deName: "Invertierter Hammer",
-    merk: "Hoch wird getestet – Käufer zeigen erste Stärke.",
-    color: "green",
-    typ: "Bullish Reversal (schwach)",
-    markt: "Abwärtstrend",
-    erklaerung: "Käufer zeigen erste Stärke – intraday hochgekauft, Schluss noch tief. Mit Folgekerze bestätigen lassen.",
-    psychologie: "Verkäufer verlieren Druck; Käufer testen Widerstand.",
-    intraday: "Im Abwärtstrend drücken Verkäufer den Kurs zunächst tiefer. Käufer schaffen intraday eine deutliche Erholung nach oben, können das Niveau aber nicht halten.",
-    beschreibung: "Kleiner Körper unten, langer oberer Schatten.",
-    bedeutung: "Erste bullische Gegenwehr.",
-    bestaetigung: "Grüne Folgekerze über Hoch des Inverted Hammer.",
-    strategie: "Sehr konservativ: nur nach klarer grüner Bestätigungskerze über dem Hoch einsteigen. Stop unter dem Tief der Kerze.",
-    wirkung: "2–3",
-    staerke: 4,
-    svg: () => <svg width={24} height={41} viewBox="0 0 28 48"><line x1="14" x2="14" y1="6" y2="30" stroke="#484f58" strokeWidth="1.5"/><rect x="8" y="30" width="12" height="8" fill="#3fb950" stroke="#238636" strokeWidth="0.5" rx="1.5"/></svg>,
-  },
-  {
-    name: "Hanging Man",
-    deName: "Hängender Mann",
-    merk: "Abverkauf zeigt Schwäche – Käufer werden schwach.",
-    color: "red",
-    typ: "Bearish Reversal",
-    markt: "Aufwärtstrend",
-    erklaerung: "Hanging Man zeigt Schwäche im Aufwärtstrend. Lange Lunte = intraday Abverkauf. Erst mit roter Folgekerze als Top verlässlicher.",
-    psychologie: "Käufer erschöpft, Smart Money verkauft in Stärke.",
-    intraday: "Nach einem Aufwärtsmove treiben Käufer den Kurs zunächst höher. Im Verlauf kommt es zu einem deutlichen Abverkauf nach unten, der nur teilweise zurückgekauft wird.",
-    beschreibung: "Wie Hammer, aber nach Aufwärtstrend.",
-    bedeutung: "Verkäufer übernehmen – Topbildung möglich.",
-    bestaetigung: "Rote Folgekerze, Volumenanstieg, RSI fällt.",
-    strategie: "Swing-Trader warten auf eine rote Bestätigungskerze unterhalb des Hanging-Man-Körpers. Stop über dem Hoch, Ziel: nächster Support oder MA20.",
-    wirkung: "2",
-    staerke: 5,
-    svg: () => <svg width={24} height={41} viewBox="0 0 28 48"><line x1="14" x2="14" y1="8" y2="42" stroke="#484f58" strokeWidth="1.5"/><rect x="8" y="12" width="12" height="8" fill="#f85149" stroke="#da3633" strokeWidth="0.5" rx="1.5"/></svg>,
-  },
-  {
-    name: "Shooting Star",
-    deName: "Sternschnuppe",
-    merk: "Hoch wird verkauft – Käufer erschöpft.",
-    color: "red",
-    typ: "Bearish Reversal",
-    markt: "Aufwärtstrend",
-    erklaerung: "Aufwärtsmomentum lässt nach: Hoch ausgenutzt, danach deutlicher Abverkauf innerhalb der Kerze.",
-    psychologie: "Käufer erschöpft, Smart Money verkauft in Stärke.",
-    intraday: "Käufer treiben den Kurs nach oben auf ein neues Hoch. Danach übernehmen Verkäufer und drücken den Schlusskurs in die Nähe des Tagestiefs.",
-    beschreibung: "Kleiner Körper unten, langer oberer Schatten.",
-    bedeutung: "Topbildung – potenzielle Umkehr.",
-    bestaetigung: "Rote Folgekerze unterhalb des Shooting Star mit Volumenanstieg.",
-    strategie: "Short-Einstieg nach roter Bestätigungskerze unterhalb des Kerzenkörpers. Stop knapp über dem Hoch.",
-    wirkung: "2–3",
-    staerke: 5,
-    svg: () => <svg width={24} height={41} viewBox="0 0 28 48"><line x1="14" x2="14" y1="6" y2="36" stroke="#484f58" strokeWidth="1.5"/><rect x="8" y="30" width="12" height="8" fill="#f85149" stroke="#da3633" strokeWidth="0.5" rx="1.5"/></svg>,
-  },
-  {
-    name: "Dragonfly Doji",
-    deName: "Libellen-Doji",
-    merk: "Abverkauf neutralisiert – Entscheidung folgt.",
-    color: "green",
-    typ: "Bullish Reversal",
-    markt: "Abwärtstrend",
-    erklaerung: "Der Dragonfly Doji zeigt nach einem Abwärtstrend eine starke Reaktion der Käufer. Starker Rückkauf bis zum Schluss = bullische Stärke.",
-    psychologie: "Verkäufer verlieren Momentum, Käufer übernehmen.",
-    intraday: "Zu Beginn dominieren Verkäufer und drücken den Kurs deutlich nach unten. Im weiteren Verlauf steigen Käufer massiv ein und bringen den Schlusskurs in die Nähe des Hochs.",
-    beschreibung: "Kein oder sehr kleiner Körper, langer unterer Schatten.",
-    bedeutung: "Bodenbildung möglich – Käufer verteidigen Support.",
-    bestaetigung: "Grüne Folgekerze über Hoch des Doji, RSI dreht nach oben.",
-    strategie: "Long-Einstieg nur bei klarer bullischer Folgekerze, die das Hoch des Doji überbietet. Stop knapp unter dem Tief der Lunte.",
-    wirkung: "2–3",
-    staerke: 3,
-    svg: () => <svg width={24} height={41} viewBox="0 0 28 48"><line x1="14" x2="14" y1="14" y2="42" stroke="#484f58" strokeWidth="1.5"/><line x1="9" x2="19" y1="14" y2="14" stroke="#7d8590" strokeWidth="2.5"/></svg>,
-  },
-  {
-    name: "Gravestone Doji",
-    deName: "Grabstein-Doji",
-    merk: "Hoch wird komplett verkauft – Warnsignal.",
-    color: "red",
-    typ: "Bearish Reversal",
-    markt: "Aufwärtstrend",
-    erklaerung: "Am Ende eines Aufwärtstrends häufig: Käufer treiben den Kurs hoch, Verkäufer drücken ihn bis zum Schluss zurück – Zeichen für Erschöpfung der Bullen.",
-    psychologie: "Käufer verlieren Kontrolle, Verkäufer übernehmen.",
-    intraday: "Käufer eröffnen stark und treiben den Kurs deutlich nach oben. Später übernehmen Verkäufer komplett und drücken den Schlusskurs zurück zum Eröffnungsniveau.",
-    beschreibung: "Kein oder sehr kleiner Körper, langer oberer Schatten.",
-    bedeutung: "Topbildung – mögliche Umkehr.",
-    bestaetigung: "Rote Folgekerze unterhalb des Doji, Volumenanstieg, Stochastik fällt.",
-    strategie: "Short-Einstieg nach roter Bestätigungskerze, die unterhalb des Doji-Körpers schließt. Stop über dem Hoch des Doji.",
-    wirkung: "2–3",
-    staerke: 4,
-    svg: () => <svg width={24} height={41} viewBox="0 0 28 48"><line x1="14" x2="14" y1="7" y2="32" stroke="#484f58" strokeWidth="1.5"/><line x1="9" x2="19" y1="32" y2="32" stroke="#7d8590" strokeWidth="2.5"/></svg>,
-  },
-  {
-    name: "Marubozu (grün)",
-    deName: "Marubozu (grün)",
-    merk: "Nur Kaufdruck – Trendstärke ohne Pause.",
-    color: "green",
-    typ: "Bullish Continuation",
-    markt: "Aufwärtstrend",
-    erklaerung: "Starke Kaufdominanz: keine Schatten – Käufer kontrollieren die gesamte Periode.",
-    psychologie: "Bullen dominieren; Momentum/Volumen stark.",
-    intraday: "Vom Open bis zum Close dominieren Käufer die gesamte Handelsspanne. Der Kurs läuft fast nur nach oben, ohne nennenswerte Rücksetzer.",
-    beschreibung: "Keine Schatten, langer grüner Körper.",
-    bedeutung: "Trendfortsetzung wahrscheinlich.",
-    bestaetigung: "Weitere grüne Kerze oder hohes Volumen.",
-    strategie: "Warte auf eine grüne Bestätigungskerze nach dem Marubozu. Erst wenn diese schließt, long einsteigen. Stop knapp unter dem Tief des Marubozu, Ziel: nächster Widerstand.",
-    wirkung: "3–5",
-    staerke: 8,
-    svg: () => <svg width={24} height={41} viewBox="0 0 28 48"><rect x="8" y="6" width="12" height="36" fill="#3fb950" stroke="#238636" strokeWidth="0.5" rx="1.5"/></svg>,
-  },
-  {
-    name: "Marubozu (rot)",
-    deName: "Marubozu (rot)",
-    merk: "Nur Verkaufsdruck – Abwärtsdruck ohne Pause.",
-    color: "red",
-    typ: "Bearish Continuation",
-    markt: "Abwärtstrend",
-    erklaerung: "Starke Verkaufsdominanz: keine Schatten – Verkäufer kontrollieren die gesamte Periode.",
-    psychologie: "Bären dominieren; Käufer ohne Gegenwehr.",
-    intraday: "Vom Open bis zum Close dominieren Verkäufer den Markt. Der Kurs fällt nahezu durchgehend, es entstehen kaum Schatten.",
-    beschreibung: "Keine Schatten, langer roter Körper.",
-    bedeutung: "Abwärtstrend / Korrektur wahrscheinlich.",
-    bestaetigung: "Weitere rote Kerze oder Volumenanstieg.",
-    strategie: "Warte auf eine rote Bestätigungskerze nach dem Marubozu. Erst wenn diese schließt, short einsteigen. Stop knapp über dem Hoch des Marubozu, Ziel: nächste Unterstützungszone.",
-    wirkung: "3–5",
-    staerke: 8,
-    svg: () => <svg width={24} height={41} viewBox="0 0 28 48"><rect x="8" y="6" width="12" height="36" fill="#f85149" stroke="#da3633" strokeWidth="0.5" rx="1.5"/></svg>,
-  },
-  {
-    name: "Doji",
-    deName: "Doji",
-    merk: "Unentschlossenheit – Folgekerze entscheidet.",
-    color: "gray",
-    typ: "Neutral",
-    markt: "Trendphase beliebig",
-    erklaerung: "Unentschlossenheit: Käufer und Verkäufer gleichen sich aus – häufig Pause/Wechsel, v. a. nach starken Trends.",
-    psychologie: "Gleichgewicht – niemand dominiert.",
-    intraday: "Innerhalb der Kerze wechseln sich Käufe und Verkäufe ab. Der Kurs pendelt zwischen Hoch und Tief, schließt aber wieder nahe dem Eröffnungsniveau.",
-    beschreibung: "Open ≈ Close, Schatten oben und unten.",
-    bedeutung: "Unsicherheit oder Trendwechsel.",
-    bestaetigung: "Folgekerze bestätigt Richtung.",
-    strategie: "Dojis werden im konservativen Swing-Trading meist nicht direkt gehandelt. Erst die Folgekerze entscheidet.",
-    wirkung: "1–2",
-    staerke: null,
-    svg: () => (
-      <svg width={24} height={41} viewBox="0 0 28 48">
-        <line x1="14" x2="14" y1="6" y2="42" stroke="#484f58" strokeWidth="1.5" />
-        <line x1="7" x2="21" y1="24" y2="24" stroke="#7d8590" strokeWidth="2.5" />
-      </svg>
-    ),
-  },
-  {
-    name: "Spinning Top",
-    deName: "Kreisel",
-    merk: "Pause im Trend – Kraft sammelt sich.",
-    color: "gray",
-    typ: "Neutral / Trendpause",
-    markt: "Seitwärtsphase oder Trendpause",
-    erklaerung: "Gleichgewicht/Unsicherheit – Markt sammelt Kraft. Oft Vorbote einer größeren Bewegung mit steigendem Volumen.",
-    psychologie: "Unentschlossenheit; Institutionelle warten.",
-    intraday: "Mehrere Impulse nach oben und unten wechseln sich ab. Der kleine Kerzenkörper zeigt, dass weder Käufer noch Verkäufer sich klar durchsetzen.",
-    beschreibung: "Kleiner Körper, obere & untere Schatten ähnlich lang.",
-    bedeutung: "Trendpause oder Richtungsänderung möglich.",
-    bestaetigung: "Bestätigung durch Folgekerze oder Volumenanstieg.",
-    strategie: "Spinning Tops werden selten direkt gehandelt. Break nach oben → prozyklisch long; Break nach unten → prozyklisch short.",
-    wirkung: "1–2",
-    staerke: null,
-    svg: () => <svg width={24} height={41} viewBox="0 0 28 48"><line x1="14" x2="14" y1="6" y2="42" stroke="#484f58" strokeWidth="1.5"/><rect x="8" y="18" width="12" height="8" fill="#7d8590" stroke="#6b7280" strokeWidth="0.5" rx="1.5"/></svg>,
-  },
+// ── Candles Data ──────────────────────────────────────────────────────────────
+const candles=[
+  {name:"Hammer",deName:"Hammer",merk:"Abverkauf wird gekauft – Käufer übernehmen.",typ:"Bullish Reversal",markt:"Abwärtstrend",erklaerung:"Signalisiert nach Abwärtstrend eine Abwehr der Verkäufer. Lange Lunte unten = Kaufdruck kommt zurück.",beschreibung:"Kleiner Körper, langer unterer Schatten.",bedeutung:"Käufer drehen den Markt – Bodenbildung.",bestaetigung:"Grüne Folgekerze, RSI steigt.",strategie:"Einstieg nach grüner Folgekerze über dem Hammer-Hoch. Stop unter das Tief.",wirkung:"2–3",staerke:5,
+   svg:()=><svg width={24} height={41} viewBox="0 0 28 48"><line x1="14" x2="14" y1="8" y2="42" stroke="#484f58" strokeWidth="1.5"/><rect x="8" y="16" width="12" height="8" fill="#3fb950" stroke="#238636" strokeWidth="0.5" rx="1.5"/></svg>},
+  {name:"Inverted Hammer",deName:"Invertierter Hammer",merk:"Hoch wird getestet – Käufer zeigen erste Stärke.",typ:"Bullish Reversal (schwach)",markt:"Abwärtstrend",erklaerung:"Käufer zeigen erste Stärke – intraday hochgekauft, Schluss noch tief.",beschreibung:"Kleiner Körper unten, langer oberer Schatten.",bedeutung:"Erste bullische Gegenwehr.",bestaetigung:"Grüne Folgekerze über Hoch.",strategie:"Nur nach klarer grüner Bestätigungskerze einsteigen. Stop unter Tief.",wirkung:"2–3",staerke:4,
+   svg:()=><svg width={24} height={41} viewBox="0 0 28 48"><line x1="14" x2="14" y1="6" y2="30" stroke="#484f58" strokeWidth="1.5"/><rect x="8" y="30" width="12" height="8" fill="#3fb950" stroke="#238636" strokeWidth="0.5" rx="1.5"/></svg>},
+  {name:"Hanging Man",deName:"Hängender Mann",merk:"Abverkauf zeigt Schwäche – Käufer werden schwach.",typ:"Bearish Reversal",markt:"Aufwärtstrend",erklaerung:"Zeigt Schwäche im Aufwärtstrend. Lange Lunte = intraday Abverkauf.",beschreibung:"Wie Hammer, aber nach Aufwärtstrend.",bedeutung:"Verkäufer übernehmen – Topbildung möglich.",bestaetigung:"Rote Folgekerze, Volumenanstieg.",strategie:"Warten auf rote Bestätigungskerze unterhalb des Körpers. Stop über Hoch.",wirkung:"2",staerke:5,
+   svg:()=><svg width={24} height={41} viewBox="0 0 28 48"><line x1="14" x2="14" y1="8" y2="42" stroke="#484f58" strokeWidth="1.5"/><rect x="8" y="12" width="12" height="8" fill="#f85149" stroke="#da3633" strokeWidth="0.5" rx="1.5"/></svg>},
+  {name:"Shooting Star",deName:"Sternschnuppe",merk:"Hoch wird verkauft – Käufer erschöpft.",typ:"Bearish Reversal",markt:"Aufwärtstrend",erklaerung:"Aufwärtsmomentum lässt nach: Hoch ausgenutzt, danach deutlicher Abverkauf.",beschreibung:"Kleiner Körper unten, langer oberer Schatten.",bedeutung:"Topbildung – potenzielle Umkehr.",bestaetigung:"Rote Folgekerze mit Volumenanstieg.",strategie:"Short-Einstieg nach roter Bestätigungskerze. Stop über Hoch.",wirkung:"2–3",staerke:5,
+   svg:()=><svg width={24} height={41} viewBox="0 0 28 48"><line x1="14" x2="14" y1="6" y2="36" stroke="#484f58" strokeWidth="1.5"/><rect x="8" y="30" width="12" height="8" fill="#f85149" stroke="#da3633" strokeWidth="0.5" rx="1.5"/></svg>},
+  {name:"Dragonfly Doji",deName:"Libellen-Doji",merk:"Abverkauf neutralisiert – Entscheidung folgt.",typ:"Bullish Reversal",markt:"Abwärtstrend",erklaerung:"Starke Reaktion der Käufer. Rückkauf bis zum Schluss = bullische Stärke.",beschreibung:"Kein Körper, langer unterer Schatten.",bedeutung:"Bodenbildung möglich.",bestaetigung:"Grüne Folgekerze über Hoch des Doji.",strategie:"Long nur bei bullischer Folgekerze. Stop unter Tief.",wirkung:"2–3",staerke:3,
+   svg:()=><svg width={24} height={41} viewBox="0 0 28 48"><line x1="14" x2="14" y1="14" y2="42" stroke="#484f58" strokeWidth="1.5"/><line x1="9" x2="19" y1="14" y2="14" stroke="#7d8590" strokeWidth="2.5"/></svg>},
+  {name:"Gravestone Doji",deName:"Grabstein-Doji",merk:"Hoch wird komplett verkauft – Warnsignal.",typ:"Bearish Reversal",markt:"Aufwärtstrend",erklaerung:"Käufer treiben Kurs hoch, Verkäufer drücken ihn zurück – Erschöpfung der Bullen.",beschreibung:"Kein Körper, langer oberer Schatten.",bedeutung:"Topbildung – mögliche Umkehr.",bestaetigung:"Rote Folgekerze unterhalb des Doji.",strategie:"Short nach roter Bestätigungskerze. Stop über Hoch.",wirkung:"2–3",staerke:4,
+   svg:()=><svg width={24} height={41} viewBox="0 0 28 48"><line x1="14" x2="14" y1="7" y2="32" stroke="#484f58" strokeWidth="1.5"/><line x1="9" x2="19" y1="32" y2="32" stroke="#7d8590" strokeWidth="2.5"/></svg>},
+  {name:"Marubozu (grün)",deName:"Marubozu (grün)",merk:"Nur Kaufdruck – Trendstärke ohne Pause.",typ:"Bullish Continuation",markt:"Aufwärtstrend",erklaerung:"Keine Schatten – Käufer kontrollieren die gesamte Periode.",beschreibung:"Keine Schatten, langer grüner Körper.",bedeutung:"Trendfortsetzung wahrscheinlich.",bestaetigung:"Weitere grüne Kerze oder hohes Volumen.",strategie:"Nach grüner Bestätigungskerze long. Stop unter Tief des Marubozu.",wirkung:"3–5",staerke:8,
+   svg:()=><svg width={24} height={41} viewBox="0 0 28 48"><rect x="8" y="6" width="12" height="36" fill="#3fb950" stroke="#238636" strokeWidth="0.5" rx="1.5"/></svg>},
+  {name:"Marubozu (rot)",deName:"Marubozu (rot)",merk:"Nur Verkaufsdruck – Abwärtsdruck ohne Pause.",typ:"Bearish Continuation",markt:"Abwärtstrend",erklaerung:"Keine Schatten – Verkäufer kontrollieren die gesamte Periode.",beschreibung:"Keine Schatten, langer roter Körper.",bedeutung:"Abwärtstrend wahrscheinlich.",bestaetigung:"Weitere rote Kerze oder Volumenanstieg.",strategie:"Nach roter Bestätigungskerze short. Stop über Hoch des Marubozu.",wirkung:"3–5",staerke:8,
+   svg:()=><svg width={24} height={41} viewBox="0 0 28 48"><rect x="8" y="6" width="12" height="36" fill="#f85149" stroke="#da3633" strokeWidth="0.5" rx="1.5"/></svg>},
+  {name:"Doji",deName:"Doji",merk:"Unentschlossenheit – Folgekerze entscheidet.",typ:"Neutral",markt:"Trendphase beliebig",erklaerung:"Käufer und Verkäufer gleichen sich aus – häufig Pause oder Wechsel.",beschreibung:"Open ≈ Close, Schatten oben und unten.",bedeutung:"Unsicherheit oder Trendwechsel.",bestaetigung:"Folgekerze bestätigt Richtung.",strategie:"Nicht direkt handeln – erst Folgekerze abwarten.",wirkung:"1–2",staerke:null,
+   svg:()=><svg width={24} height={41} viewBox="0 0 28 48"><line x1="14" x2="14" y1="6" y2="42" stroke="#484f58" strokeWidth="1.5"/><line x1="7" x2="21" y1="24" y2="24" stroke="#7d8590" strokeWidth="2.5"/></svg>},
+  {name:"Spinning Top",deName:"Kreisel",merk:"Pause im Trend – Kraft sammelt sich.",typ:"Neutral / Trendpause",markt:"Seitwärtsphase oder Trendpause",erklaerung:"Gleichgewicht – Markt sammelt Kraft. Oft Vorbote einer größeren Bewegung.",beschreibung:"Kleiner Körper, Schatten oben & unten ähnlich lang.",bedeutung:"Trendpause oder Richtungsänderung möglich.",bestaetigung:"Folgekerze oder Volumenanstieg.",strategie:"Selten direkt handeln. Break nach oben → long; Break nach unten → short.",wirkung:"1–2",staerke:null,
+   svg:()=><svg width={24} height={41} viewBox="0 0 28 48"><line x1="14" x2="14" y1="6" y2="42" stroke="#484f58" strokeWidth="1.5"/><rect x="8" y="18" width="12" height="8" fill="#7d8590" stroke="#6b7280" strokeWidth="0.5" rx="1.5"/></svg>},
 ];
 
-
-// ─── App ───────────────────────────────────────────────────────────────────
-// ─── Quiz Engine ──────────────────────────────────────────────────────────────
-const QUESTION_TYPES = ["name_from_description", "type_from_name", "market_from_name", "strength_from_name", "strategy_from_name"];
-const ROUND_SIZE = 10;
-const LABELS = ["A", "B", "C", "D"];
-
-function pick(arr, k) {
-  const a = [...arr], out = [];
-  while (out.length < k && a.length) out.push(a.splice(Math.floor(Math.random() * a.length), 1)[0]);
+// ── Quiz Engine ───────────────────────────────────────────────────────────────
+const QTYPES=["name_from_desc","type_from_name","market_from_name","strength_from_name","strategy_from_name"];
+const RS=10,LABELS=["A","B","C","D"];
+function pick(arr,k){const a=[...arr],o=[];while(o.length<k&&a.length)o.push(a.splice(Math.floor(Math.random()*a.length),1)[0]);return o;}
+function buildRound(size){
+  const out=[],tq=[];
+  while(tq.length<size)tq.push(...[...QTYPES].sort(()=>Math.random()-.5));
+  const cq=[];while(cq.length<size*2)cq.push(...[...candles].sort(()=>Math.random()-.5));
+  let ci=0;
+  for(let t=0;out.length<size&&t<1000;t++){
+    const qt=tq[out.length],item=cq[ci%cq.length];ci++;
+    if(qt==="strength_from_name"&&isNeutral(item.typ))continue;
+    if(out.slice(-3).map(q=>q.item?.name).includes(item.name))continue;
+    let prompt="",choices=[],correct="";
+    switch(qt){
+      case"name_from_desc":prompt=`Welche Kerze passt zur Beschreibung: „${item.beschreibung}" (Signal: ${item.bedeutung})?`;correct=item.name;choices=pick(candles.map(c=>c.name),4);if(!choices.includes(correct))choices[0]=correct;break;
+      case"type_from_name":prompt=`Welches Signal gibt ${displayName(item)}?`;correct=item.typ;choices=pick([...new Set(candles.map(c=>c.typ))],4);if(!choices.includes(correct))choices[0]=correct;break;
+      case"market_from_name":prompt=`In welchem Trend erscheint ${displayName(item)}?`;correct=item.markt;choices=pick([...new Set(candles.map(c=>c.markt))],4);if(!choices.includes(correct))choices[0]=correct;break;
+      case"strength_from_name":prompt=`Welche Signalstärke (1–10) hat ${displayName(item)}?`;correct=String(item.staerke);choices=pick(["3","4","5","6","7","8","9","10"],4);if(!choices.includes(correct))choices[0]=correct;break;
+      case"strategy_from_name":prompt=`Wie würdest du ${displayName(item)} als Swing-Trader handeln?`;correct=item.strategie;choices=[correct,...pick(candles.filter(c=>c.name!==item.name).map(c=>c.strategie),3)];break;
+    }
+    out.push({qt,item,prompt,choices:pick(choices,choices.length),correct,svg:item.svg});
+  }
+  while(out.length<size){const item=candles[0];out.push({qt:"name_from_desc",item,prompt:`Welche Kerze: „${item.beschreibung}"?`,choices:pick(candles.map(c=>c.name),4),correct:item.name,svg:item.svg});}
   return out;
 }
+const FC=["✓ Stark!","✓ Perfekt!","✓ Sehr gut!","✓ Richtig!","✓ Exzellent!"];
+const FW=["✗ Knapp daneben.","✗ Nicht ganz.","✗ Falsch – lern weiter!","✗ Fast – nochmal lesen.","✗ Wiederholung macht den Meister."];
+const rndFb=ok=>(ok?FC:FW)[Math.floor(Math.random()*(ok?FC:FW).length)];
 
-function buildQuestion() {
-  for (let i = 0; i < 50; i++) {
-    const qtype = pick(QUESTION_TYPES, 1)[0];
-    const item  = pick(candles, 1)[0];
-    if (qtype === "strength_from_name" && isNeutralTyp(item.typ)) continue;
-    let prompt = "", choices = [], correct = "", renderGraphic = null;
-    switch (qtype) {
-      case "name_from_description":
-        prompt = `Welche Kerze passt zur Beschreibung: „${item.beschreibung}" (Signal: ${item.bedeutung})?`;
-        correct = item.name; choices = pick(candles.map((c) => c.name), 4);
-        if (!choices.includes(correct)) choices[0] = correct;
-        renderGraphic = item.svg; break;
-      case "type_from_name":
-        prompt = `Welches Signal gibt ${displayName(item)}?`;
-        correct = item.typ; choices = pick([...new Set(candles.map((c) => c.typ))], 4);
-        if (!choices.includes(correct)) choices[0] = correct;
-        renderGraphic = item.svg; break;
-      case "market_from_name":
-        prompt = `In welchem Trend erscheint ${displayName(item)}?`;
-        correct = item.markt; choices = pick([...new Set(candles.map((c) => c.markt))], 4);
-        if (!choices.includes(correct)) choices[0] = correct;
-        renderGraphic = item.svg; break;
-      case "strength_from_name":
-        prompt = `Welche Signalstärke (1–10) hat ${displayName(item)}?`;
-        correct = String(item.staerke); choices = pick(["3","4","5","6","7","8","9","10"], 4);
-        if (!choices.includes(correct)) choices[0] = correct;
-        renderGraphic = item.svg; break;
-      case "strategy_from_name":
-        prompt = `Wie würdest du ${displayName(item)} als Swing-Trader handeln?`;
-        correct = item.strategie;
-        choices = [correct, ...pick(candles.filter((c) => c.name !== item.name).map((c) => c.strategie), 3)];
-        renderGraphic = item.svg; break;
-      default: break;
-    }
-    choices = pick(choices, choices.length);
-    return { qtype, item, prompt, choices, correct, renderGraphic };
-  }
-  const item = candles[0];
-  return { qtype: "name_from_description", item, prompt: `Welche Kerze passt zur Beschreibung: „${item.beschreibung}"?`, choices: pick(candles.map((c) => c.name), 4), correct: item.name, renderGraphic: item.svg };
-}
-
-function buildRoundQuestions(size) {
-  const out = [];
-  const typePool = [];
-  while (typePool.length < size) typePool.push(...[...QUESTION_TYPES].sort(() => Math.random() - 0.5));
-  const typeQueue = typePool.slice(0, size);
-  const candleQueue = [];
-  while (candleQueue.length < size * 2) candleQueue.push(...[...candles].sort(() => Math.random() - 0.5));
-  let ci = 0;
-  for (let tries = 0; out.length < size && tries < 1000; tries++) {
-    const qtype = typeQueue[out.length];
-    const item  = candleQueue[ci % candleQueue.length]; ci++;
-    if (qtype === "strength_from_name" && isNeutralTyp(item.typ)) continue;
-    if (out.slice(-3).map((q) => q.item?.name).includes(item.name)) continue;
-    let prompt = "", choices = [], correct = "", renderGraphic = null;
-    switch (qtype) {
-      case "name_from_description":
-        prompt = `Welche Kerze passt zur Beschreibung: „${item.beschreibung}" (Signal: ${item.bedeutung})?`;
-        correct = item.name; choices = pick(candles.map((c) => c.name), 4);
-        if (!choices.includes(correct)) choices[0] = correct; renderGraphic = item.svg; break;
-      case "type_from_name":
-        prompt = `Welches Signal gibt ${displayName(item)}?`;
-        correct = item.typ; choices = pick([...new Set(candles.map((c) => c.typ))], 4);
-        if (!choices.includes(correct)) choices[0] = correct; renderGraphic = item.svg; break;
-      case "market_from_name":
-        prompt = `In welchem Trend erscheint ${displayName(item)}?`;
-        correct = item.markt; choices = pick([...new Set(candles.map((c) => c.markt))], 4);
-        if (!choices.includes(correct)) choices[0] = correct; renderGraphic = item.svg; break;
-      case "strength_from_name":
-        prompt = `Welche Signalstärke (1–10) hat ${displayName(item)}?`;
-        correct = String(item.staerke); choices = pick(["3","4","5","6","7","8","9","10"], 4);
-        if (!choices.includes(correct)) choices[0] = correct; renderGraphic = item.svg; break;
-      case "strategy_from_name":
-        prompt = `Wie würdest du ${displayName(item)} als Swing-Trader handeln?`;
-        correct = item.strategie;
-        choices = [correct, ...pick(candles.filter((c) => c.name !== item.name).map((c) => c.strategie), 3)];
-        renderGraphic = item.svg; break;
-      default: break;
-    }
-    choices = pick(choices, choices.length);
-    out.push({ qtype, item, prompt, choices, correct, renderGraphic });
-  }
-  while (out.length < size) out.push(buildQuestion());
-  return out;
-}
-
-// ─── Gamification ─────────────────────────────────────────────────────────────
-const FEEDBACK_CORRECT = ["✓ Stark! Genau erkannt.", "✓ Perfekt – du kennst deine Muster.", "✓ Sehr gut! Das sitzt.", "✓ Richtig! Trading-Instinkt bestätigt.", "✓ Exzellent – weiter so!"];
-const FEEDBACK_WRONG   = ["✗ Knapp daneben – schau dir die Erklärung an.", "✗ Nicht ganz – das Muster ist tückisch.", "✗ Falsch, aber du lernst daraus.", "✗ Fast – lies die Details nochmal durch.", "✗ Noch nicht – Wiederholung macht den Meister."];
-const randomFeedback = (ok) => { const a = ok ? FEEDBACK_CORRECT : FEEDBACK_WRONG; return a[Math.floor(Math.random() * a.length)]; };
-
-function FaqItem({ question, answer }) {
-  const [open, setOpen] = React.useState(false);
-  return (
-    <div style={{ borderBottom: `1px solid ${C.border}` }}>
-      <button onClick={() => setOpen(o => !o)} style={{ width:"100%", padding:"14px 0", display:"flex", justifyContent:"space-between", alignItems:"center", background:"none", border:"none", cursor:"pointer", color:C.text, fontSize:15, fontWeight:600, textAlign:"left", gap:12, boxShadow:"none" }}>
-        <span>{question}</span>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="2" style={{ flexShrink:0, transform:open?"rotate(180deg)":"rotate(0deg)", transition:"transform 0.2s" }}><polyline points="6 9 12 15 18 9"/></svg>
+// ── FAQ ───────────────────────────────────────────────────────────────────────
+function FaqItem({q,a}){
+  const[open,setOpen]=useState(false);
+  return(
+    <div style={{borderBottom:`1px solid ${C.border}`}}>
+      <button onClick={()=>setOpen(o=>!o)} style={{width:"100%",padding:"14px 0",display:"flex",justifyContent:"space-between",alignItems:"center",background:"none",border:"none",cursor:"pointer",color:C.text,fontSize:15,fontWeight:600,textAlign:"left",gap:12,boxShadow:"none"}}>
+        <span>{q}</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="2" style={{flexShrink:0,transform:open?"rotate(180deg)":"none",transition:"transform .2s"}}><polyline points="6 9 12 15 18 9"/></svg>
       </button>
-      {open && <div style={{ fontSize:14, color:C.textMuted, lineHeight:1.7, paddingBottom:14, paddingRight:28 }}>{answer}</div>}
+      {open&&<div style={{fontSize:14,color:C.textMuted,lineHeight:1.7,paddingBottom:14,paddingRight:28}}>{a}</div>}
     </div>
   );
 }
 
-// ─── Main App ─────────────────────────────────────────────────────────────────
-export default function App() {
-  const [theme, setTheme] = useState(() => localStorage.getItem("cq_theme") || "light");
-  setThemeTokens(theme);
+// ── App ───────────────────────────────────────────────────────────────────────
+function App(){
+  const[theme,setTheme]=useState(()=>storage.get("cq_theme")||"light");
+  setTok(theme);
+  const[mode,setMode]=useState("quiz");
+  const[answer,setAnswer]=useState(null);
+  const[fbText,setFbText]=useState("");
+  const[score,setScore]=useState(()=>Number(storage.get("cq_score")||0));
+  const[history,setHistory]=useState(()=>{try{return JSON.parse(storage.get("cq_history")||"[]");}catch{return[];}});
+  const[lastRound,setLastRound]=useState(null);
+  const[reviewMode,setReviewMode]=useState(false);
+  const[reviewQueue,setReviewQueue]=useState([]);
+  const[reviewIdx,setReviewIdx]=useState(0);
+  const[round,setRound]=useState(()=>({queue:buildRound(RS),index:0}));
+  const[flash,setFlash]=useState(null);
+  const[showReset,setShowReset]=useState(false);
+  const[showReviewDone,setShowReviewDone]=useState(false);
+  const[showCert,setShowCert]=useState(false);
+  const[showFeedback,setShowFeedback]=useState(false);
+  const[certEmail,setCertEmail]=useState("");
+  const[certFirst,setCertFirst]=useState("");
+  const[certLast,setCertLast]=useState("");
+  const[certPrivacy,setCertPrivacy]=useState(false);
+  const[certSent,setCertSent]=useState(false);
+  const[certLevel,setCertLevel]=useState("");
+  const[isFirstVisit]=useState(()=>!storage.get("cq_visited"));
+  const flashRef=useRef(null);
 
-  const [mode,         setMode]         = useState("quiz");
-  const [answer,       setAnswer]       = useState(null);
-  const [feedbackText, setFeedbackText] = useState("");
-  const [score,        setScore]        = useState(() => Number(localStorage.getItem("cq_score") || 0));
-  const [history,      setHistory]      = useState(() => { try { return JSON.parse(localStorage.getItem("cq_history") || "[]"); } catch { return []; } });
-  const [lastRound,    setLastRound]    = useState(null);
-  const [reviewMode,   setReviewMode]   = useState(false);
-  const [reviewQueue,  setReviewQueue]  = useState([]);
-  const [reviewIndex,  setReviewIndex]  = useState(0);
-  const [round,        setRound]        = useState(() => ({ queue: buildRoundQuestions(ROUND_SIZE), index: 0 }));
-  const [flash,        setFlash]        = useState(null);
-  const [showResetConfirm,  setShowResetConfirm]  = useState(false);
-  const [showReviewDone,    setShowReviewDone]    = useState(false);
-  const [showCertificate,   setShowCertificate]   = useState(false);
-  const [showFeedbackForm,  setShowFeedbackForm]  = useState(false);
-  const [certEmail,     setCertEmail]     = useState("");
-  const [certFirstName, setCertFirstName] = useState("");
-  const [certLastName,  setCertLastName]  = useState("");
-  const [certBirthdate, setCertBirthdate] = useState("");
-  const [certPlz,       setCertPlz]       = useState("");
-  const [certPrivacy,   setCertPrivacy]   = useState(false);
-  const [certSent,      setCertSent]      = useState(false);
-  const [certLevel,     setCertLevel]     = useState(null);
-  const [roundStats,    setRoundStats]    = useState(() => { try { return JSON.parse(localStorage.getItem("cq_round_stats") || '{"rounds":[],"bronzeDone":false,"silberDone":false,"goldDone":false}'); } catch { return {rounds:[],bronzeDone:false,silberDone:false,goldDone:false}; } });
-  const [isFirstVisit]                    = useState(() => !localStorage.getItem("cq_visited"));
+  useEffect(()=>{storage.set("cq_visited","1");},[]);
+  useEffect(()=>()=>{if(flashRef.current)clearTimeout(flashRef.current);},[]);
+  useEffect(()=>{storage.set("cq_theme",theme);},[theme]);
+  useEffect(()=>{storage.set("cq_score",String(score));},[score]);
 
-  const flashRef = useRef(null);
+  const inReview=reviewMode&&reviewQueue.length>0;
+  const q=inReview?reviewQueue[reviewIdx]:round.queue[round.index];
+  const isNow=isNeutral(q?.item?.typ);
+  const wasCorrect=answer!==null?answer===q.correct:null;
+  const progress=useMemo(()=>{const m=history.length%RS;return(history.length>0&&m===0)?100:m*(100/RS);},[history.length]);
+  const curNum=inReview?reviewIdx+1:round.index+1;
 
-  useEffect(() => () => { if (flashRef.current) clearTimeout(flashRef.current); }, []);
-  useEffect(() => { localStorage.setItem("cq_visited", "1"); }, []);
-  useEffect(() => {
-    const f=[{q:"Was sind Candlestick Muster?",a:"Candlestick Muster sind grafische Darstellungen von Kursbewegungen. Bekannte Patterns wie Hammer, Doji oder Shooting Star helfen Tradern mögliche Trendwechsel zu erkennen."},{q:"Was sind Candlestick Patterns?",a:"Candlestick Patterns ist die englische Bezeichnung für Kerzenmuster wie Hammer, Shooting Star, Doji, Marubozu, Hanging Man, Dragonfly Doji und Gravestone Doji."},{q:"Was ist eine Flashcard?",a:"Eine Flashcard ist eine Karteikarte – eine bewährte Lernmethode. Im Candlestick Quiz zeigt jede Flashcard ein Kerzenmuster mit Beschreibung, Signal und Strategie."},{q:"Ist das Candlestick Quiz kostenlos?",a:"Ja, vollständig kostenlos und ohne Anmeldung nutzbar."},{q:"Gibt es ein Zertifikat?",a:"Ja! Bronze (70%+), Silber (80%+ in 3 Runden), Gold (90%+ in 5 Runden) – kostenlos per E-Mail."},{q:"Für wen ist das Quiz?",a:"Für Einsteiger die Trading lernen möchten und Fortgeschrittene die Candlestick Patterns auffrischen wollen."},{q:"Wie viele Candlestick Muster?",a:"10 Candlestick Muster: Hammer, Inverted Hammer, Hanging Man, Shooting Star, Dragonfly Doji, Gravestone Doji, Marubozu grün/rot, Doji und Spinning Top."},{q:"Unterschied Hammer und Hanging Man?",a:"Beide sehen identisch aus. Hammer nach Abwärtstrend bullisch, Hanging Man nach Aufwärtstrend bärisch."},{q:"Wie wird ein Candlestick Pattern bestätigt?",a:"Durch die Folgekerze die die Richtung bestätigt. RSI und Volumen helfen zusätzlich."}];
-    const s=document.createElement("script");s.id="faq-schema";s.type="application/ld+json";
-    s.textContent=JSON.stringify({"@context":"https://schema.org","@type":"FAQPage","mainEntity":f.map(({q,a})=>({"@type":"Question","name":q,"acceptedAnswer":{"@type":"Answer","text":a}}))});
-    const e=document.getElementById("faq-schema");if(e)e.remove();
-    document.head.appendChild(s);
-    return()=>{const x=document.getElementById("faq-schema");if(x)x.remove();};
-  }, []);
-
-  useEffect(() => { localStorage.setItem("cq_theme",   theme); }, [theme]);
-  useEffect(() => { localStorage.setItem("cq_score",   String(score)); }, [score]);
-
-  const inReview        = reviewMode && reviewQueue.length > 0;
-  const answeredCurrent = answer !== null;
-  const q               = inReview ? reviewQueue[reviewIndex] : round.queue[round.index];
-  const isNeutralNow    = isNeutralTyp(q?.item?.typ);
-  const currentWasCorrect = answeredCurrent ? answer === q.correct : null;
-
-  const progress = useMemo(() => {
-    if (inReview) return 0;
-    const mod = history.length % ROUND_SIZE;
-    if (history.length > 0 && mod === 0) return 100;
-    return mod * (100 / ROUND_SIZE);
-  }, [history.length, inReview]);
-
-  const curNum  = inReview ? reviewIndex + 1 : round.index + 1;
-  const totalNum = inReview ? reviewQueue.length : ROUND_SIZE;
-
-  function next() {
-    setAnswer(null); setFlash(null); setFeedbackText("");
-    if (inReview) { setReviewIndex((i) => (i + 1) % reviewQueue.length); return; }
-    setRound((prev) => {
-      const ni = prev.index + 1;
-      return ni >= prev.queue.length ? { queue: buildRoundQuestions(ROUND_SIZE), index: 0 } : { ...prev, index: ni };
-    });
+  function next(){
+    setAnswer(null);setFlash(null);setFbText("");
+    if(inReview){setReviewIdx(i=>(i+1)%reviewQueue.length);return;}
+    setRound(prev=>{const ni=prev.index+1;return ni>=prev.queue.length?{queue:buildRound(RS),index:0}:{...prev,index:ni};});
   }
 
-  function check(a) {
-    if (answer !== null) return;
-    const isCorrect = a === q.correct;
-    setAnswer(a); setFeedbackText(randomFeedback(isCorrect));
-    if (isCorrect) setScore((s) => s + 1);
-    setFlash(isCorrect ? "correct" : "wrong");
-    if (flashRef.current) clearTimeout(flashRef.current);
-    flashRef.current = setTimeout(() => setFlash(null), 400);
-    if (!inReview) {
-      setHistory((prev) => {
-        const nr = prev.length + 1;
-        const entry = { nr, question: q, given: a, isCorrect, points: isCorrect ? 10 : 0 };
-        const updated = [...prev, entry];
-        localStorage.setItem("cq_history", JSON.stringify(updated.slice(-30)));
-        if (nr % ROUND_SIZE === 0) {
-          const roundEntries = updated.slice(nr - ROUND_SIZE, nr);
-          const cc = roundEntries.filter((r) => r.isCorrect).length;
-          const pct = Math.round((cc / ROUND_SIZE) * 100);
-          setLastRound({ entries: roundEntries, correctCount: cc, percent: pct });
-          setRoundStats(prev => {
-            const rs=[...prev.rounds,pct],s={...prev,rounds:rs};
-            if(!prev.goldDone&&rs.filter(p=>p>=90).length>=5){s.goldDone=true;setCertLevel("gold");setShowCertificate(true);}
-            else if(!prev.silberDone&&rs.filter(p=>p>=80).length>=3){s.silberDone=true;setCertLevel("silber");setShowCertificate(true);}
-            else if(!prev.bronzeDone&&rs.filter(p=>p>=70).length>=1){s.bronzeDone=true;setCertLevel("bronze");setShowCertificate(true);}
-            localStorage.setItem("cq_round_stats",JSON.stringify(s));return s;
-          });
+  function check(a){
+    if(answer!==null)return;
+    const ok=a===q.correct;
+    setAnswer(a);setFbText(rndFb(ok));
+    if(ok)setScore(s=>s+1);
+    setFlash(ok?"correct":"wrong");
+    if(flashRef.current)clearTimeout(flashRef.current);
+    flashRef.current=setTimeout(()=>setFlash(null),400);
+    if(!inReview){
+      setHistory(prev=>{
+        const nr=prev.length+1;
+        const entry={nr,question:q,given:a,isCorrect:ok,points:ok?10:0};
+        const updated=[...prev,entry];
+        storage.set("cq_history",JSON.stringify(updated.slice(-30)));
+        if(nr%RS===0){
+          const re=updated.slice(nr-RS,nr);
+          const cc=re.filter(r=>r.isCorrect).length;
+          const pct=Math.round((cc/RS)*100);
+          setLastRound({entries:re,correctCount:cc,percent:pct});
+          // Zertifikat: pro Runde basierend auf diesem Ergebnis
+          if(pct>=90){setCertLevel("🥇 Gold");setShowCert(true);}
+          else if(pct>=80){setCertLevel("🥈 Silber");setShowCert(true);}
+          else if(pct>=70){setCertLevel("🥉 Bronze");setShowCert(true);}
         }
         return updated;
       });
     }
   }
 
-  function startReviewWrong() {
-    if (!lastRound) return;
-    const wrong = lastRound.entries.filter((e) => !e.isCorrect);
-    if (!wrong.length) return;
-    setReviewQueue(wrong.map((e) => e.question));
-    setReviewIndex(0); setReviewMode(true); setAnswer(null); setFlash(null);
+  function startReview(){
+    if(!lastRound)return;
+    const wrong=lastRound.entries.filter(e=>!e.isCorrect);
+    if(!wrong.length)return;
+    setReviewQueue(wrong.map(e=>e.question));
+    setReviewIdx(0);setReviewMode(true);setAnswer(null);setFlash(null);
+  }
+  function stopReview(){
+    setReviewMode(false);setReviewQueue([]);setReviewIdx(0);
+    setRound({queue:buildRound(RS),index:0});
+    setAnswer(null);setFlash(null);setFbText("");setShowReviewDone(true);
+  }
+  function resetAll(){
+    setScore(0);setHistory([]);setLastRound(null);
+    setReviewMode(false);setReviewQueue([]);setReviewIdx(0);
+    setRound({queue:buildRound(RS),index:0});
+    setAnswer(null);setFlash(null);setFbText("");
+    storage.remove("cq_score");storage.remove("cq_history");
   }
 
-  function stopReview() {
-    setReviewMode(false); setReviewQueue([]); setReviewIndex(0);
-    setRound({ queue: buildRoundQuestions(ROUND_SIZE), index: 0 });
-    setAnswer(null); setFlash(null); setFeedbackText(""); setShowReviewDone(true);
-  }
+  const inp={padding:"10px 14px",borderRadius:6,fontSize:13,border:`1px solid ${C.border}`,background:C.surfaceHi,color:C.text,outline:"none",width:"100%"};
 
-  function resetAll() {
-    setScore(0); setHistory([]); setLastRound(null);
-    setReviewMode(false); setReviewQueue([]); setReviewIndex(0);
-    setRound({ queue: buildRoundQuestions(ROUND_SIZE), index: 0 });
-    setAnswer(null); setFlash(null); setFeedbackText("");
-    localStorage.removeItem("cq_score"); localStorage.removeItem("cq_history");
-    localStorage.removeItem("cq_round_stats");
-    setRoundStats({rounds:[],bronzeDone:false,silberDone:false,goldDone:false});
-    setCertLevel(null);
-  }
-
-  const inputStyle = {
-    padding: "10px 14px", borderRadius: 6, fontSize: 13,
-    border: `1px solid ${C.border}`, background: C.surfaceHi,
-    color: C.text, outline: "none", width: "100%",
-  };
-
-  return (
+  return(
     <>
-      <GlobalStyle theme={theme} />
-      <div className="app-padding" style={{ minHeight: "100vh", background: C.bg, color: C.text, padding: "20px 20px 48px", fontFamily: font.sans }}>
-        <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gap: 16 }}>
+      <GlobalStyle theme={theme}/>
+      <div className="app-padding" style={{minHeight:"100vh",background:C.bg,color:C.text,padding:"20px 20px 48px",fontFamily:font.sans}}>
+        <div style={{maxWidth:900,margin:"0 auto",display:"grid",gap:16}}>
 
-          {/* ── Header ── */}
-          <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", paddingBottom: 16, borderBottom: `1px solid ${C.border}` }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} style={{ display: "flex", gap: 3 }}>
-                    {[...Array(3)].map((_, j) => (
-                      <div key={j} style={{ width: 3, height: i === 1 ? 10 : i === 0 ? 6 : 14, background: i === 2 && j === 1 ? C.red : i === 0 && j === 1 ? C.green : C.border, borderRadius: 1 }} />
+          {/* Header */}
+          <header style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap",paddingBottom:16,borderBottom:`1px solid ${C.border}`}}>
+            <div style={{display:"flex",alignItems:"center",gap:14}}>
+              <div style={{display:"flex",flexDirection:"column",gap:2}}>
+                {[...Array(3)].map((_,i)=>(
+                  <div key={i} style={{display:"flex",gap:3}}>
+                    {[...Array(3)].map((_,j)=>(
+                      <div key={j} style={{width:3,height:i===1?10:i===0?6:14,background:i===2&&j===1?C.red:i===0&&j===1?C.green:C.border,borderRadius:1}}/>
                     ))}
                   </div>
                 ))}
               </div>
               <div>
-                <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.01em", lineHeight: 1 }}>Candlestick Quiz</div>
-                <div style={{ fontSize: 11, color: C.textMuted, fontFamily: font.mono, marginTop: 3 }}>Swing-Trading · {candles.length} Muster</div>
+                <div style={{fontSize:15,fontWeight:600,letterSpacing:"-0.01em",lineHeight:1}}>Candlestick Quiz</div>
+                <div style={{fontSize:11,color:C.textMuted,fontFamily:font.mono,marginTop:3}}>Swing-Trading · {candles.length} Muster</div>
               </div>
             </div>
-            <div className="header-nav" style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <div className="header-nav" style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
               <div className="score-badge">Punkte <span>{score}</span></div>
-              <div style={{ width: 1, height: 24, background: C.border }} />
-              <button className="nav-btn" onClick={() => setTheme((t) => t === "dark" ? "light" : "dark")} title={theme === "dark" ? "Zu hellem Design wechseln" : "Zu dunklem Design wechseln"} style={{ fontSize: 15, padding: "5px 10px" }}>
-                {theme === "dark" ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg> : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>}
+              <div style={{width:1,height:24,background:C.border}}/>
+              <button className="nav-btn muted" onClick={()=>setTheme(t=>t==="dark"?"light":"dark")} style={{fontSize:15,padding:"5px 10px"}}>
+                {theme==="dark"?<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>}
               </button>
-              <div style={{ width: 1, height: 24, background: C.border }} />
-              <button className={`nav-btn${mode === "quiz"  ? " active" : ""}`} onClick={() => setMode("quiz")} title="Quiz: Beantworte 10 Fragen zu Candlestick Mustern">Quiz</button>
-              <button className={`nav-btn${mode === "flash" ? " active" : ""}`} onClick={() => setMode("flash")} title="Flashcards: Alle 10 Muster auf einen Blick">Flashcards</button>
-              <button className="nav-btn" onClick={() => setShowResetConfirm(true)} title="Quiz zurücksetzen – Punkte und Verlauf löschen">Reset</button>
-              {inReview && <button className="nav-btn danger" onClick={stopReview}>Review ✕</button>}
+              <div style={{width:1,height:24,background:C.border}}/>
+              <button className={`nav-btn${mode==="quiz"?" active":""}`} onClick={()=>setMode("quiz")}>Quiz</button>
+              <button className={`nav-btn${mode==="lernen"?" active":""}`} onClick={()=>setMode("lernen")} style={isFirstVisit&&mode!=="lernen"?{borderColor:C.blue,color:C.blue,animation:"pulse 1.5s ease-in-out 3"}:{}}>
+                Lernen{isFirstVisit&&mode!=="lernen"&&<span style={{fontSize:9,background:C.blue,color:"#fff",borderRadius:10,padding:"1px 5px",marginLeft:4}}>NEU</span>}
+              </button>
+              <button className={`nav-btn${mode==="flash"?" active":""}`} onClick={()=>setMode("flash")}>Flashcards</button>
+              <button className="nav-btn danger" onClick={()=>setShowReset(true)}>Reset</button>
+              {inReview&&<button className="nav-btn danger" onClick={stopReview}>Review ✕</button>}
             </div>
           </header>
 
-          {/* ── Hero – nur beim ersten Besuch ── */}
-          <section style={{ display: isFirstVisit ? "grid" : "none", gap: 20, padding: "24px 0 8px" }} aria-hidden={!isFirstVisit}>
-              <div style={{ display: "grid", gap: 10 }}>
-                <h1 className="hero-title" style={{ fontSize: 22, fontWeight: 600, lineHeight: 1.2, color: C.text, margin: 0 }}>Candlestick Quiz – Kerzenmuster verstehen und Trading lernen</h1>
-                <p style={{ fontSize: 15, lineHeight: 1.7, color: C.textMuted, margin: 0 }}>Lerne die wichtigsten Candlestick Muster wie Hammer, Doji, Shooting Star und Marubozu interaktiv kennen. Verbessere deine Chartanalyse und dein Wissen im Swing Trading.</p>
-                <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 6 }}>
-                  {["10 Kerzenmuster mit Kontext-Chart und Strategie","Für Anfänger und Fortgeschrittene geeignet","Kostenlos – ohne Anmeldung sofort starten"].map(t=>(
-                    <li key={t} style={{ fontSize: 14, color: C.textMuted, display: "flex", gap: 8 }}><span style={{ color: C.green, flexShrink: 0 }}>✓</span><span>{t}</span></li>
-                  ))}
-                </ul>
+          {/* Onboarding Banner */}
+          {isFirstVisit&&mode==="quiz"&&(
+            <div style={{padding:"14px 18px",borderRadius:10,background:C.blueBg,border:`1.5px solid ${C.blueBdr}`,display:"flex",alignItems:"center",justifyContent:"space-between",gap:14,flexWrap:"wrap",animation:"fadeIn .3s ease forwards"}}>
+              <div style={{display:"flex",alignItems:"center",gap:12}}>
+                <span style={{fontSize:22}}>👋</span>
+                <div>
+                  <div style={{fontSize:13,fontWeight:600,color:C.text}}>Neu hier? Starte mit dem Lernen-Tab!</div>
+                  <div style={{fontSize:12,color:C.textMuted,marginTop:2}}>Lerne zuerst was Kerzen sind – dann macht das Quiz viel mehr Sinn.</div>
+                </div>
               </div>
-              <div>
-                <button onClick={() => { setMode("quiz"); setTimeout(() => document.getElementById("quiz-anchor")?.scrollIntoView({ behavior: "smooth" }), 50); }}
-                  style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 24px", borderRadius: 8, background: C.green, color: "#fff", fontWeight: 600, fontSize: 15, border: "none", cursor: "pointer", transition: "opacity 0.15s, transform 0.15s" }}
-                  onMouseEnter={e=>{e.currentTarget.style.opacity="0.85";e.currentTarget.style.transform="translateY(-2px)";}}
-                  onMouseLeave={e=>{e.currentTarget.style.opacity="1";e.currentTarget.style.transform="translateY(0)";}}>
-                  Quiz jetzt starten →
-                </button>
-              </div>
-            </section>
-
-          {/* ── Progress ── */}
-          {mode === "quiz" && !inReview && (
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div className="progress-bar" style={{ flex: 1 }}>
-                <div className="progress-fill" style={{ width: `${progress}%` }} />
-              </div>
-              <div style={{ fontSize: 11, color: C.textMuted, fontFamily: font.mono, flexShrink: 0, whiteSpace: "nowrap" }}>
-                Frage {curNum} von {totalNum}
-              </div>
+              <button className="cta-btn" style={{fontSize:13,padding:"9px 18px"}} onClick={()=>setMode("lernen")}>Jetzt lernen →</button>
             </div>
           )}
 
-          {/* ── Review Banner ── */}
-          {inReview && (
-            <div style={{ padding: "10px 16px", borderRadius: 8, background: C.yellowBg, border: `1px solid ${C.yellowBdr}`, fontSize: 13, color: C.yellow, display: "flex", alignItems: "center", gap: 10 }}>
-              <span>⟳</span> Review-Modus — falsche Fragen ({reviewIndex + 1}/{reviewQueue.length})
+          {/* Progress */}
+          {mode==="quiz"&&!inReview&&(
+            <div style={{display:"flex",alignItems:"center",gap:12}}>
+              <div className="progress-bar" style={{flex:1}}><div className="progress-fill" style={{width:`${progress}%`}}/></div>
+              <div style={{fontSize:11,color:C.textMuted,fontFamily:font.mono,flexShrink:0}}>Frage {curNum} von {RS}</div>
             </div>
           )}
 
-          {/* ── Quiz ── */}
-          {mode === "quiz" && !inReview && (
-            <div style={{ display:"flex", gap:8, flexWrap:"wrap", background:C.surfaceHi, borderRadius:10, padding:"12px", border:`1px solid ${C.border}` }}>
-              {[{key:"bronze",label:"🥉 Bronze",desc:"70%+ in 1 Runde",done:roundStats.bronzeDone,count:roundStats.rounds.filter(p=>p>=70).length,need:1},{key:"silber",label:"🥈 Silber",desc:"80%+ in 3 Runden",done:roundStats.silberDone,count:roundStats.rounds.filter(p=>p>=80).length,need:3},{key:"gold",label:"🥇 Gold",desc:"90%+ in 5 Runden",done:roundStats.goldDone,count:roundStats.rounds.filter(p=>p>=90).length,need:5}].map(({key,label,desc,done,count,need})=>(
-                <div key={key} style={{flex:1,minWidth:140,padding:"10px 14px",borderRadius:8,border:`1px solid ${done?C.greenBdr:C.border}`,background:done?C.greenBg:C.surfaceHi,display:"flex",flexDirection:"column",gap:4}}>
-                  <div style={{fontSize:13,fontWeight:600,color:done?C.green:C.text}}>{label}</div>
-                  <div style={{fontSize:11,color:C.textMuted}}>{desc}</div>
-                  <div style={{height:4,background:C.border,borderRadius:2,overflow:"hidden",marginTop:2}}><div style={{height:"100%",width:`${Math.min(100,(count/need)*100)}%`,background:done?C.green:C.blue,borderRadius:2,transition:"width 0.4s"}}/></div>
-                  <div style={{fontSize:11,color:C.textMuted,fontFamily:"monospace"}}>{done?"✓ Erreicht!":`${count} / ${need}`}</div>
+          {/* Review Banner */}
+          {inReview&&(
+            <div style={{padding:"10px 16px",borderRadius:8,background:C.yellowBg,border:`1px solid ${C.yellowBdr}`,fontSize:13,color:C.yellow,display:"flex",alignItems:"center",gap:10}}>
+              ⟳ Review-Modus — falsche Fragen ({reviewIdx+1}/{reviewQueue.length})
+            </div>
+          )}
+
+          {/* Zertifikat-Info */}
+          {mode==="quiz"&&!inReview&&(
+            <div style={{padding:"12px 16px",borderRadius:10,background:C.surfaceHi,border:`1px solid ${C.border}`,display:"flex",gap:12,flexWrap:"wrap",alignItems:"center"}}>
+              <div style={{fontSize:13,color:C.textMuted}}>Zertifikat pro Runde:</div>
+              {[{l:"🥉 Bronze",d:"70%+",c:C.yellow},{l:"🥈 Silber",d:"80%+",c:"#9ca3af"},{l:"🥇 Gold",d:"90%+",c:C.yellow}].map(({l,d,c})=>(
+                <div key={l} style={{display:"flex",alignItems:"center",gap:6,padding:"4px 10px",borderRadius:6,background:C.surface,border:`1px solid ${C.border}`}}>
+                  <span style={{fontSize:13,fontWeight:600,color:c}}>{l}</span>
+                  <span style={{fontSize:11,color:C.textMuted,fontFamily:font.mono}}>{d}</span>
                 </div>
               ))}
             </div>
           )}
-          <div id="quiz-anchor" />
-          {mode === "quiz" && q && (
-            <div className={`quiz-card${flash === "correct" ? " flash-green" : flash === "wrong" ? " flash-red" : ""}`}>
-              <div style={{ display: "grid", gap: 20 }}>
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
-                  <div style={{ flexShrink: 0, background: C.surfaceHi, borderRadius: 8, padding: "10px 8px", border: `1px solid ${C.border}` }} role="img" aria-label={`Candlestick Pattern: ${q.item?.name || ""}`}>
-                    {q.renderGraphic && <q.renderGraphic />}
+
+          {/* Quiz */}
+          <div id="quiz-anchor"/>
+          {mode==="quiz"&&q&&(
+            <div className={`quiz-card${flash==="correct"?" flash-green":flash==="wrong"?" flash-red":""}`}>
+              <div style={{display:"grid",gap:20}}>
+                <div style={{display:"flex",alignItems:"flex-start",gap:16}}>
+                  <div style={{flexShrink:0,background:C.surfaceHi,borderRadius:8,padding:"10px 8px",border:`1px solid ${C.border}`}}>
+                    {q.svg&&<q.svg/>}
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 10, flexWrap: "wrap" }}>
-                      <span style={{ fontFamily: font.mono, fontSize: 11, color: C.textDim }}>FRAGE {curNum}/{totalNum}</span>
+                  <div style={{flex:1}}>
+                    <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:10,flexWrap:"wrap"}}>
+                      <span style={{fontFamily:font.mono,fontSize:11,color:C.textDim}}>FRAGE {curNum}/{RS}</span>
                       <span className={`tag ${colorTag(q.item?.typ)}`}>{q.item?.typ}</span>
                     </div>
-                    <p style={{ fontSize: 16, lineHeight: 1.6, color: C.text, fontWeight: 600 }}>{q.prompt}</p>
+                    <p style={{fontSize:16,lineHeight:1.6,color:C.text,fontWeight:600}}>{q.prompt}</p>
                   </div>
                 </div>
-
-                <div className="choices-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10 }}>
-                  {q.choices.map((c, idx) => {
-                    const chosen = answer === c, correct = q.correct === c;
-                    let cls = "choice-btn";
-                    if (answer) { if (correct) cls += " correct"; else if (chosen) cls += " wrong"; else cls += " dimmed"; }
-                    return (
-                      <button key={idx} className={cls} onClick={() => check(c)} disabled={!!answer}>
-                        <span className="badge">{LABELS[idx]}</span>
-                        <span style={{ flex: 1 }}>{c}</span>
-                      </button>
-                    );
+                <div className="choices-grid" style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10}}>
+                  {q.choices.map((c,idx)=>{
+                    const chosen=answer===c,correct=q.correct===c;
+                    let cls="choice-btn";
+                    if(answer){if(correct)cls+=" correct";else if(chosen)cls+=" wrong";else cls+=" dimmed";}
+                    return(<button key={idx} className={cls} onClick={()=>check(c)} disabled={!!answer}>
+                      <span className="badge">{LABELS[idx]}</span>
+                      <span style={{flex:1}}>{c}</span>
+                    </button>);
                   })}
                 </div>
-
-                {answer && (
+                {answer&&(
                   <div className="reveal-box">
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: currentWasCorrect ? C.green : C.red }}>{feedbackText}</div>
-                      <button className="nav-btn primary" onClick={next} style={{ flexShrink: 0 }}>Nächste Frage →</button>
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,marginBottom:14,flexWrap:"wrap"}}>
+                      <div style={{fontSize:13,fontWeight:600,color:wasCorrect?C.green:C.red}}>{fbText}</div>
+                      <button className="nav-btn primary" onClick={next}>Nächste Frage →</button>
                     </div>
-                    <div style={{ fontSize: 13, color: C.textMuted, marginBottom: 14 }}>
-                      Korrekte Antwort: <span style={{ color: C.text, fontWeight: 600 }}>{q.correct}</span>
-                    </div>
-                    <div style={{ display: "grid", gap: 8, marginBottom: 14 }}>
-                      {q.item.merk && (
-                        <div style={{ padding: "10px 14px", borderRadius: 6, background: `${C.yellow}0a`, border: `1px solid ${C.yellowBdr}`, fontSize: 13, color: C.yellow }}>
-                          💡 {q.item.merk}
-                        </div>
-                      )}
-                      <div className="info-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 24px" }}>
-                        <InfoRow label="Typ"           value={q.item.typ} />
-                        <InfoRow label="Markt"         value={q.item.markt} />
-                        <InfoRow label="Signalstärke"  value={isNeutralNow ? "— (neutral)" : `${q.item.staerke} / 10`} />
-                        <InfoRow label="Wirkungsdauer" value={`${q.item.wirkung} Tage`} />
-                        <InfoRow label="Bestätigung"   value={q.item.bestaetigung} fullWidth />
-                        <InfoRow label="Psychologie"   value={q.item.psychologie}  fullWidth />
-                        <InfoRow label="Strategie"     value={q.item.strategie}    fullWidth />
+                    <div style={{fontSize:13,color:C.textMuted,marginBottom:14}}>Korrekte Antwort: <span style={{color:C.text,fontWeight:600}}>{q.correct}</span></div>
+                    <div style={{display:"grid",gap:8,marginBottom:14}}>
+                      {q.item.merk&&<div style={{padding:"10px 14px",borderRadius:6,background:`${C.yellow}0a`,border:`1px solid ${C.yellowBdr}`,fontSize:13,color:C.yellow}}>💡 {q.item.merk}</div>}
+                      <div className="info-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px 24px"}}>
+                        <InfoRow label="Typ" value={q.item.typ}/>
+                        <InfoRow label="Markt" value={q.item.markt}/>
+                        <InfoRow label="Signalstärke" value={isNow?"— (neutral)":`${q.item.staerke} / 10`}/>
+                        <InfoRow label="Wirkung" value={`${q.item.wirkung} Tage`}/>
+                        <InfoRow label="Bestätigung" value={q.item.bestaetigung} fullWidth/>
+                        <InfoRow label="Strategie" value={q.item.strategie} fullWidth/>
                       </div>
                     </div>
-                    <ContextChart candle={q.item} />
-                    {q.item.erklaerung && (
-                      <div className="info-box" style={{ marginTop: 12, padding: "10px 14px", borderRadius: 6, lineHeight: 1.6 }}>
-                        <span style={{ color: C.textMuted, fontWeight: 600 }}>Erklärung: </span>{q.item.erklaerung}
-                      </div>
-                    )}
+                    <ContextChart candle={q.item}/>
+                    {q.item.erklaerung&&<div className="info-box" style={{marginTop:12}}><span style={{fontWeight:600}}>Erklärung: </span>{q.item.erklaerung}</div>}
                   </div>
                 )}
-
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div style={{ fontSize: 11, color: C.textDim, fontFamily: font.mono }}>{history.length} Fragen beantwortet · {score} Punkte</div>
-                  {answer && <button className="nav-btn primary" onClick={next}>Nächste Frage →</button>}
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <div style={{fontSize:11,color:C.textDim,fontFamily:font.mono}}>{history.length} beantwortet · {score} Punkte</div>
+                  {answer&&<button className="nav-btn primary" onClick={next}>Nächste Frage →</button>}
                 </div>
               </div>
             </div>
           )}
 
-          {/* ── Flashcards ── */}
-          {mode === "flash" && (
-            <>
-              <div className="info-box" style={{ padding: "10px 16px", borderRadius: 8 }}>
-                📚 <strong style={{ color: C.text }}>Alle {candles.length} Muster auf einen Blick</strong> – ideal zur Wiederholung vor dem Quiz.
+          {/* Lernen Tab */}
+          {mode==="lernen"&&(
+            <div style={{display:"grid",gap:20,animation:"fadeIn .2s ease forwards"}}>
+              <div style={{padding:"24px",borderRadius:10,background:C.surface,border:`1.5px solid ${C.blueBdr}`,display:"grid",gap:12}}>
+                <div style={{fontSize:11,color:C.blue,fontFamily:font.mono,textTransform:"uppercase",letterSpacing:"0.08em"}}>Einstieg · Absolute Anfänger</div>
+                <h2 style={{fontSize:20,fontWeight:600,color:C.text,lineHeight:1.3}}>Kerzencharts lesen lernen – das Fundament des Tradings</h2>
+                <p style={{fontSize:15,lineHeight:1.8,color:C.textMuted}}>Bevor du den ersten Trade machst, lerne die <strong style={{color:C.text}}>Sprache des Marktes</strong>. Jede Kerze erzählt dir in Echtzeit was Käufer und Verkäufer denken.</p>
+                <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                  {["Kein Vorwissen nötig","~10 Min. Lesezeit","Direkt zum Quiz danach"].map(t=>(
+                    <span key={t} style={{fontSize:12,padding:"3px 10px",borderRadius:20,background:C.blueBg,color:C.blue,border:`1px solid ${C.blueBdr}`,fontFamily:font.mono}}>{t}</span>
+                  ))}
+                </div>
               </div>
-              <div className="flashcards-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 14 }}>
-                {candles.map((c, i) => (
-                  <div key={i} className="flash-card">
-                    <div style={{ display: "flex", gap: 14, alignItems: "flex-start", marginBottom: 12 }}>
-                      <div style={{ flexShrink: 0, background: C.surfaceHi, borderRadius: 8, padding: "8px 6px", border: `1px solid ${C.border}` }} role="img" aria-label={`Candlestick Pattern: ${c.name}`}>
-                        {c.svg && <c.svg />}
+
+              <div style={{padding:"20px",borderRadius:10,background:C.surface,border:`1.5px solid ${C.border}`}}>
+                <div style={{fontSize:15,fontWeight:600,color:C.text,marginBottom:14,display:"flex",alignItems:"center",gap:8}}>
+                  <span style={{background:C.blueBg,color:C.blue,borderRadius:6,padding:"2px 10px",fontSize:12,fontFamily:font.mono,border:`1px solid ${C.blueBdr}`}}>01</span>Was ist eine Kerze?
+                </div>
+                <p style={{fontSize:14,lineHeight:1.8,color:C.textMuted,marginBottom:16}}>Eine <strong style={{color:C.text}}>Kerze</strong> zeigt die Kursbewegung in einem Zeitraum – z.B. einem Tag. Sie besteht aus vier Werten:</p>
+                <div style={{display:"flex",gap:24,flexWrap:"wrap",alignItems:"flex-start",marginBottom:16}}>
+                  {[{col:"#3fb950",label:"Grüne Kerze",sub:"Schluss > Eröffnung · Käufer gewinnen ↑",yO:120,yC:40},{col:"#f85149",label:"Rote Kerze",sub:"Schluss < Eröffnung · Verkäufer gewinnen ↓",yO:40,yC:120}].map(({col,label,sub,yO,yC})=>(
+                    <div key={label} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8}}>
+                      <div style={{fontSize:12,fontWeight:600,color:col}}>{label}</div>
+                      <svg width="80" height="160" viewBox="0 0 80 160">
+                        <line x1="40" x2="40" y1="10" y2="40" stroke="#484f58" strokeWidth="2"/>
+                        <rect x="20" y="40" width="40" height="80" fill={col} stroke={col==="#3fb950"?"#238636":"#da3633"} strokeWidth="1" rx="2"/>
+                        <line x1="40" x2="40" y1="120" y2="148" stroke="#484f58" strokeWidth="2"/>
+                        <text x="68" y="14" fontSize="9" fill="#7d8590" fontFamily="monospace">Hoch</text>
+                        <text x="68" y={yO===40?44:124} fontSize="9" fill={col} fontFamily="monospace">{yO===40?"Schluss":"Eröffnung"}</text>
+                        <text x="68" y={yO===40?124:44} fontSize="9" fill={col} fontFamily="monospace">{yO===40?"Eröffnung":"Schluss"}</text>
+                        <text x="68" y="150" fontSize="9" fill="#7d8590" fontFamily="monospace">Tief</text>
+                      </svg>
+                      <div style={{fontSize:11,color:col,fontFamily:font.mono,textAlign:"center"}}>{sub}</div>
+                    </div>
+                  ))}
+                  <div style={{flex:1,minWidth:200,display:"grid",gap:8}}>
+                    {[
+                      {t:"Hoch",e:"Der höchste Kurs im Zeitraum – Spitze des oberen Dochts.",a:"#58a6ff",svg:<svg width="36" height="60" viewBox="0 0 36 60"><line x1="18" x2="18" y1="4" y2="14" stroke="#58a6ff" strokeWidth="2.5"/><rect x="9" y="14" width="18" height="24" fill="#3fb950" stroke="#238636" strokeWidth="0.5" rx="1.5" opacity="0.25"/><line x1="18" x2="18" y1="38" y2="52" stroke="#484f58" strokeWidth="1.5" opacity="0.3"/><circle cx="18" cy="4" r="3" fill="#58a6ff"/></svg>},
+                      {t:"Oberer Docht",e:"Vom Körper bis zum Hoch. Käufer hochgetrieben, Verkäufer zurückgedrückt.",a:"#f85149",svg:<svg width="36" height="60" viewBox="0 0 36 60"><line x1="18" x2="18" y1="4" y2="14" stroke="#f85149" strokeWidth="2.5"/><rect x="9" y="14" width="18" height="24" fill="#3fb950" opacity="0.25" rx="1.5"/><line x1="18" x2="18" y1="38" y2="52" stroke="#484f58" strokeWidth="1.5" opacity="0.3"/><rect x="14" y="2" width="8" height="14" rx="2" fill="none" stroke="#f85149" strokeWidth="1.5" strokeDasharray="3,2"/></svg>},
+                      {t:"Körper",e:"Bereich zwischen Eröffnung und Schluss – die Hauptbewegung. Grün = Käufer, Rot = Verkäufer.",a:"#3fb950",svg:<svg width="36" height="60" viewBox="0 0 36 60"><line x1="18" x2="18" y1="4" y2="14" stroke="#484f58" strokeWidth="1.5" opacity="0.3"/><rect x="9" y="14" width="18" height="24" fill="#3fb950" stroke="#238636" strokeWidth="0.5" rx="1.5"/><line x1="18" x2="18" y1="38" y2="52" stroke="#484f58" strokeWidth="1.5" opacity="0.3"/><rect x="6" y="11" width="24" height="30" rx="3" fill="none" stroke="#3fb950" strokeWidth="2" strokeDasharray="4,2"/></svg>},
+                      {t:"Unterer Docht",e:"Vom Körper bis zum Tief. Verkäufer gedrückt, Käufer zurückgekauft.",a:"#e3b341",svg:<svg width="36" height="60" viewBox="0 0 36 60"><line x1="18" x2="18" y1="4" y2="14" stroke="#484f58" strokeWidth="1.5" opacity="0.3"/><rect x="9" y="14" width="18" height="24" fill="#3fb950" opacity="0.25" rx="1.5"/><line x1="18" x2="18" y1="38" y2="52" stroke="#e3b341" strokeWidth="2.5"/><rect x="14" y="36" width="8" height="18" rx="2" fill="none" stroke="#e3b341" strokeWidth="1.5" strokeDasharray="3,2"/></svg>},
+                      {t:"Tief",e:"Der tiefste Kurs im Zeitraum – Spitze des unteren Dochts.",a:"#7d8590",svg:<svg width="36" height="60" viewBox="0 0 36 60"><line x1="18" x2="18" y1="4" y2="14" stroke="#484f58" strokeWidth="1.5" opacity="0.3"/><rect x="9" y="14" width="18" height="24" fill="#3fb950" opacity="0.25" rx="1.5"/><line x1="18" x2="18" y1="38" y2="52" stroke="#484f58" strokeWidth="1.5" opacity="0.3"/><circle cx="18" cy="52" r="3" fill="#7d8590"/></svg>},
+                    ].map(({t,e,a,svg})=>(
+                      <div key={t} style={{padding:"10px 12px",borderRadius:6,background:C.surfaceHi,border:`1px solid ${C.border}`,display:"flex",gap:12,alignItems:"center"}}>
+                        <div style={{flexShrink:0,background:C.bg,borderRadius:6,padding:"4px",border:`1px solid ${C.border}`,width:48,height:68,display:"flex",alignItems:"center",justifyContent:"center"}}>{svg}</div>
+                        <div><div style={{fontSize:12,fontWeight:600,color:a,marginBottom:2}}>{t}</div><div style={{fontSize:12,color:C.textMuted,lineHeight:1.5}}>{e}</div></div>
                       </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 0 }}>{displayName(c)}</div>
-                        {c.merk && <div style={{ fontSize: 13, color: C.yellow, lineHeight: 1.5 }}>{c.merk}</div>}
-                        <div style={{ marginTop: 6, display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    ))}
+                  </div>
+                </div>
+                <div style={{padding:"10px 14px",borderRadius:6,background:C.yellowBg,border:`1px solid ${C.yellowBdr}`,fontSize:13,color:C.yellow}}>💡 <strong>Merksatz:</strong> Grüne Kerze = Käufer haben gewonnen. Rote Kerze = Verkäufer haben gewonnen.</div>
+              </div>
+
+              <div style={{padding:"20px",borderRadius:10,background:C.surface,border:`1.5px solid ${C.border}`}}>
+                <div style={{fontSize:15,fontWeight:600,color:C.text,marginBottom:14,display:"flex",alignItems:"center",gap:8}}>
+                  <span style={{background:C.blueBg,color:C.blue,borderRadius:6,padding:"2px 10px",fontSize:12,fontFamily:font.mono,border:`1px solid ${C.blueBdr}`}}>02</span>Warum Kerzenanalyse?
+                </div>
+                <div style={{display:"grid",gap:10}}>
+                  {[{e:"😰",t:"Panik der Verkäufer",d:"Lange untere Dochte: Kurs wurde abverkauft, Käufer haben zurückgeschlagen – mögliche Bodenbildung."},{e:"🤑",t:"Erschöpfung der Käufer",d:"Lange obere Dochte: Kurs hochgekauft, Verkäufer haben zurückgedrückt – mögliche Topbildung."},{e:"⚖️",t:"Gleichgewicht",d:"Kleine Körper (Doji): Käufer und Verkäufer gleich stark – Unentschlossenheit vor großer Bewegung."},{e:"💪",t:"Dominanz",d:"Große Körper ohne Dochte (Marubozu): Eine Seite dominiert komplett."}].map(({e,t,d})=>(
+                    <div key={t} style={{padding:"12px 14px",borderRadius:8,background:C.surfaceHi,border:`1px solid ${C.border}`,display:"flex",gap:12,alignItems:"flex-start"}}>
+                      <span style={{fontSize:20,flexShrink:0}}>{e}</span>
+                      <div><div style={{fontSize:13,fontWeight:600,color:C.text,marginBottom:3}}>{t}</div><div style={{fontSize:13,color:C.textMuted,lineHeight:1.6}}>{d}</div></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{padding:"20px",borderRadius:10,background:C.surface,border:`1.5px solid ${C.border}`}}>
+                <div style={{fontSize:15,fontWeight:600,color:C.text,marginBottom:14,display:"flex",alignItems:"center",gap:8}}>
+                  <span style={{background:C.blueBg,color:C.blue,borderRadius:6,padding:"2px 10px",fontSize:12,fontFamily:font.mono,border:`1px solid ${C.blueBdr}`}}>03</span>Glossar
+                </div>
+                <div style={{display:"grid",gap:8}}>
+                  {[["Bullish 🟢","Steigende Erwartung – Käufer sind aktiv."],["Bearish 🔴","Fallende Erwartung – Verkäufer sind aktiv."],["Trend","Allgemeine Richtung: Aufwärtstrend (steigt), Abwärtstrend (fällt), Seitwärts."],["Aufwärtstrend","Jedes neue Hoch und Tief ist höher als das vorherige."],["Abwärtstrend","Jedes neue Hoch und Tief ist tiefer als das vorherige."],["Support","Zone wo Käufer wiederholt kaufen – Kurs prallt nach oben ab."],["Widerstand","Zone wo Verkäufer aktiv werden – Kurs dreht nach unten."],["Reversal","Trendwechsel – z.B. von Abwärts- zu Aufwärtstrend."],["Bestätigung","Folgekerze die das Signal bestätigt – erst dann handeln."],["Volumen","Anzahl gehandelter Wertpapiere. Hohes Volumen = stärkeres Signal."]].map(([b,e])=>(
+                    <div key={b} style={{display:"grid",gridTemplateColumns:"160px 1fr",gap:12,padding:"10px 14px",borderRadius:6,background:C.surfaceHi,border:`1px solid ${C.border}`,alignItems:"baseline"}}>
+                      <div style={{fontSize:13,fontWeight:600,color:C.text,fontFamily:font.mono}}>{b}</div>
+                      <div style={{fontSize:13,color:C.textMuted,lineHeight:1.6}}>{e}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{padding:"20px",borderRadius:10,background:C.surface,border:`1.5px solid ${C.border}`}}>
+                <div style={{fontSize:15,fontWeight:600,color:C.text,marginBottom:6,display:"flex",alignItems:"center",gap:8}}>
+                  <span style={{background:C.blueBg,color:C.blue,borderRadius:6,padding:"2px 10px",fontSize:12,fontFamily:font.mono,border:`1px solid ${C.blueBdr}`}}>04</span>Welche Muster gibt es?
+                </div>
+                <p style={{fontSize:14,color:C.textMuted,lineHeight:1.8,marginBottom:14}}>Es gibt <strong style={{color:C.text}}>vier Grundtypen</strong> von Kerzenmustern:</p>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:12}}>
+                  {[{t:"🟢 Bullish Reversal",d:"Abwärtstrend dreht nach oben. Beispiele: Hammer, Inverted Hammer, Dragonfly Doji",c:C.green,bg:C.greenBg,b:C.greenBdr},{t:"🔴 Bearish Reversal",d:"Aufwärtstrend dreht nach unten. Beispiele: Shooting Star, Hanging Man, Gravestone Doji",c:C.red,bg:C.redBg,b:C.redBdr},{t:"⚪ Neutral",d:"Unentschlossenheit – Folgekerze entscheidet. Beispiele: Doji, Spinning Top",c:C.textMuted,bg:C.surfaceHi,b:C.border},{t:"📈 Continuation",d:"Trend setzt sich fort. Beispiele: Marubozu grün/rot",c:C.blue,bg:C.blueBg,b:C.blueBdr}].map(({t,d,c,bg,b})=>(
+                    <div key={t} style={{padding:"14px",borderRadius:8,background:bg,border:`1px solid ${b}`}}>
+                      <div style={{fontSize:13,fontWeight:600,color:c,marginBottom:6}}>{t}</div>
+                      <div style={{fontSize:12,color:C.textMuted,lineHeight:1.6}}>{d}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{padding:"24px",borderRadius:10,background:C.greenBg,border:`1.5px solid ${C.greenBdr}`,textAlign:"center",display:"grid",gap:12}}>
+                <div style={{fontSize:18,fontWeight:600,color:C.green}}>Bereit für den Quiz? 🚀</div>
+                <p style={{fontSize:14,color:C.textMuted,lineHeight:1.6}}>Du kennst jetzt die Grundlagen. Teste dein Wissen mit <strong style={{color:C.text}}>10 Fragen</strong>.</p>
+                <div><button className="cta-btn" onClick={()=>setMode("quiz")}>Quiz jetzt starten →</button></div>
+              </div>
+            </div>
+          )}
+
+          {/* Flashcards */}
+          {mode==="flash"&&(
+            <>
+              <div className="info-box" style={{padding:"10px 16px",borderRadius:8}}>📚 <strong style={{color:C.text}}>Alle {candles.length} Muster auf einen Blick</strong> – ideal zur Wiederholung.</div>
+              <div className="flashcards-grid" style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:14}}>
+                {candles.map((c,i)=>(
+                  <div key={i} className="flash-card">
+                    <div style={{display:"flex",gap:14,alignItems:"flex-start",marginBottom:12}}>
+                      <div style={{flexShrink:0,background:C.surfaceHi,borderRadius:8,padding:"8px 6px",border:`1px solid ${C.border}`}}>{c.svg&&<c.svg/>}</div>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontWeight:600,fontSize:15}}>{displayName(c)}</div>
+                        {c.merk&&<div style={{fontSize:13,color:C.yellow,lineHeight:1.5}}>{c.merk}</div>}
+                        <div style={{marginTop:6,display:"flex",gap:6,flexWrap:"wrap"}}>
                           <span className={`tag ${colorTag(c.typ)}`}>{c.typ}</span>
-                          <span className="tag tag-gray">{isNeutralTyp(c.typ) ? "— neutral" : `★ ${c.staerke}/10`}</span>
+                          <span className="tag tag-gray">{isNeutral(c.typ)?"— neutral":`★ ${c.staerke}/10`}</span>
                         </div>
                       </div>
                     </div>
-                    <div className="divider" />
-                    <div style={{ display: "grid", gap: 8 }}>
-                      <InfoRow label="Markt"        value={c.markt}        fontSize={13} />
-                      <InfoRow label="Beschreibung" value={c.beschreibung} fontSize={13} />
-                      <InfoRow label="Bedeutung"    value={c.bedeutung}    fontSize={13} />
-                      <InfoRow label="Bestätigung"  value={c.bestaetigung} fontSize={13} />
-                      <InfoRow label="Psychologie"  value={c.psychologie}  fontSize={13} />
-                      <InfoRow label="Strategie"    value={c.strategie}    fontSize={13} />
+                    <div style={{height:1,background:C.border,margin:"12px 0"}}/>
+                    <div style={{display:"grid",gap:8}}>
+                      <InfoRow label="Markt" value={c.markt}/>
+                      <InfoRow label="Beschreibung" value={c.beschreibung}/>
+                      <InfoRow label="Bedeutung" value={c.bedeutung}/>
+                      <InfoRow label="Bestätigung" value={c.bestaetigung}/>
+                      <InfoRow label="Strategie" value={c.strategie}/>
                     </div>
-                    <ContextChart candle={c} />
-                    {c.erklaerung && (
-                      <div className="info-box" style={{ marginTop: 10, padding: "8px 12px", borderRadius: 6, lineHeight: 1.5 }}>
-                        <span style={{ color: C.textMuted, fontWeight: 600 }}>Erklärung: </span>{c.erklaerung}
-                      </div>
-                    )}
+                    <ContextChart candle={c}/>
+                    {c.erklaerung&&<div className="info-box" style={{marginTop:10}}><span style={{fontWeight:600}}>Erklärung: </span>{c.erklaerung}</div>}
                   </div>
                 ))}
+              </div>
+              <div style={{padding:"24px",borderRadius:10,background:C.greenBg,border:`1.5px solid ${C.greenBdr}`,textAlign:"center",display:"grid",gap:12,marginTop:4}}>
+                <div style={{fontSize:18,fontWeight:600,color:C.green}}>Wissen testen? 🎯</div>
+                <p style={{fontSize:14,color:C.textMuted,lineHeight:1.6}}>Du hast alle Muster gesehen – jetzt der Praxistest.</p>
+                <div><button className="cta-btn" onClick={()=>setMode("quiz")}>Quiz jetzt starten →</button></div>
               </div>
             </>
           )}
 
-          {/* ── Review Done ── */}
-          {showReviewDone && mode === "quiz" && (
-            <div className="card" style={{ border: `1px solid ${C.greenBdr}`, background: C.greenBg }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "flex-start" }}>
-                <div style={{ fontSize: 20 }}>🏆</div>
-                <div style={{ fontWeight: 600, fontSize: 15, color: C.green }}>Stark – du hast deine Fehler verbessert!</div>
-                <p style={{ fontSize: 15, color: C.textMuted, lineHeight: 1.6 }}>
-                  Möchtest du den Test erneut machen und dir die Chance auf ein <strong style={{ color: C.text }}>Zertifikat</strong> sichern?
-                </p>
-                <button className="nav-btn primary" onClick={() => { setShowReviewDone(false); resetAll(); }}>Test neu starten →</button>
+          {/* Review Done */}
+          {showReviewDone&&mode==="quiz"&&(
+            <div className="card" style={{border:`1px solid ${C.greenBdr}`,background:C.greenBg}}>
+              <div style={{display:"flex",flexDirection:"column",gap:12,alignItems:"flex-start"}}>
+                <div style={{fontSize:20}}>🏆</div>
+                <div style={{fontWeight:600,fontSize:15,color:C.green}}>Stark – du hast deine Fehler verbessert!</div>
+                <button className="cta-btn" style={{fontSize:13,padding:"10px 20px"}} onClick={()=>{setShowReviewDone(false);resetAll();}}>Neue Runde →</button>
               </div>
             </div>
           )}
 
-          {/* ── Rundenübersicht ── */}
-          {lastRound && mode === "quiz" && (
+          {/* Rundenübersicht */}
+          {lastRound&&mode==="quiz"&&(
             <div className="card">
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: 15 }}>Rundenübersicht</div>
-                  <div style={{ fontSize: 11, color: C.textMuted, marginTop: 2 }}>{lastRound.correctCount}/{ROUND_SIZE} richtig · {lastRound.percent}%</div>
+                  <div style={{fontWeight:600,fontSize:15}}>Rundenübersicht</div>
+                  <div style={{fontSize:11,color:C.textMuted,marginTop:2}}>{lastRound.correctCount}/{RS} richtig</div>
                 </div>
-                <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                  <div style={{ fontFamily: font.mono, fontSize: 20, fontWeight: 600, color: lastRound.percent >= 70 ? C.green : lastRound.percent >= 40 ? C.yellow : C.red }}>
-                    {lastRound.percent}%
-                  </div>
-                  <button className="nav-btn" style={{ opacity: lastRound.entries.filter((e) => !e.isCorrect).length === 0 ? 0.4 : 1 }} disabled={lastRound.entries.filter((e) => !e.isCorrect).length === 0} onClick={startReviewWrong}>
-                    Falsche wiederholen
-                  </button>
+                <div style={{display:"flex",gap:10,alignItems:"center"}}>
+                  <div style={{fontFamily:font.mono,fontSize:20,fontWeight:600,color:lastRound.percent>=70?C.green:lastRound.percent>=40?C.yellow:C.red}}>{lastRound.percent}%</div>
+                  <button className="nav-btn secondary" style={{opacity:lastRound.entries.filter(e=>!e.isCorrect).length===0?.4:1}} disabled={lastRound.entries.filter(e=>!e.isCorrect).length===0} onClick={startReview}>Falsche wiederholen</button>
                 </div>
               </div>
-              <div style={{ overflowX: "auto" }}>
+              <div style={{overflowX:"auto"}}>
                 <table>
-                  <thead><tr><th>#</th><th>Kerze</th><th>Frage (kurz)</th><th>Ergebnis</th><th>Punkte</th></tr></thead>
+                  <thead><tr><th>#</th><th>Kerze</th><th>Frage</th><th>OK</th><th>Pkt</th></tr></thead>
                   <tbody>
-                    {lastRound.entries.map((e, idx) => {
-                      const prompt = e.question?.prompt || "";
-                      return (
-                        <tr key={e.nr}>
-                          <td style={{ color: C.textMuted, fontFamily: font.mono, fontSize: 11 }}>{idx + 1}</td>
-                          <td style={{ fontWeight: 400, fontSize: 13 }}>{e.question?.item ? displayName(e.question.item) : ""}</td>
-                          <td style={{ color: C.textMuted, fontSize: 11 }}>{prompt.length > 55 ? prompt.slice(0, 52) + "…" : prompt}</td>
-                          <td style={{ color: e.isCorrect ? C.green : C.red, fontFamily: font.mono, fontSize: 13 }}>{e.isCorrect ? "✓" : "✗"}</td>
-                          <td style={{ fontFamily: font.mono, fontSize: 11, color: e.isCorrect ? C.green : C.textMuted }}>{e.points}</td>
-                        </tr>
-                      );
-                    })}
-                    <tr style={{ fontWeight: 600 }}>
-                      <td colSpan={3} style={{ color: C.textMuted, paddingTop: 12 }}>Gesamt</td>
-                      <td style={{ paddingTop: 12, color: lastRound.percent >= 70 ? C.green : lastRound.percent >= 40 ? C.yellow : C.red }}>{lastRound.correctCount}/{ROUND_SIZE}</td>
-                      <td style={{ paddingTop: 12, fontFamily: font.mono }}>{lastRound.percent}%</td>
+                    {lastRound.entries.map((e,idx)=>(
+                      <tr key={e.nr}>
+                        <td style={{color:C.textMuted,fontFamily:font.mono,fontSize:11}}>{idx+1}</td>
+                        <td style={{fontSize:13}}>{e.question?.item?displayName(e.question.item):""}</td>
+                        <td style={{color:C.textMuted,fontSize:11}}>{(e.question?.prompt||"").slice(0,52)}…</td>
+                        <td style={{color:e.isCorrect?C.green:C.red,fontFamily:font.mono,fontSize:13}}>{e.isCorrect?"✓":"✗"}</td>
+                        <td style={{fontFamily:font.mono,fontSize:11,color:e.isCorrect?C.green:C.textMuted}}>{e.points}</td>
+                      </tr>
+                    ))}
+                    <tr style={{fontWeight:600}}>
+                      <td colSpan={3} style={{color:C.textMuted,paddingTop:12}}>Gesamt</td>
+                      <td style={{paddingTop:12,color:lastRound.percent>=70?C.green:lastRound.percent>=40?C.yellow:C.red}}>{lastRound.correctCount}/{RS}</td>
+                      <td style={{paddingTop:12,fontFamily:font.mono}}>{lastRound.percent}%</td>
                     </tr>
                   </tbody>
                 </table>
@@ -1095,142 +624,99 @@ export default function App() {
             </div>
           )}
 
-          {/* ── SEO Content ── */}
-          <section style={{ display: "grid", gap: 18, background: C.surfaceHi, borderRadius: 10, padding: 20, border: `1px solid ${C.border}` }}>
-            <div>
-              <div style={{ fontSize: 20, fontWeight: 600, marginBottom: 10 }}>Was sind Candlestick Muster?</div>
-              <p style={{ fontSize: 15, lineHeight: 1.8, color: C.textMuted }}>
-                Candlestick Muster, auch <strong style={{ color: C.text }}>Kerzenmuster</strong> genannt, sind ein zentrales Werkzeug der technischen Analyse. Sie helfen Tradern dabei, das Verhalten von Käufern und Verkäufern im Chart besser zu verstehen und mögliche Trendwechsel frühzeitig zu erkennen.
-              </p>
-            </div>
-            <div>
-              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>Warum ist ein Candlestick Quiz sinnvoll?</div>
-              <p style={{ fontSize: 15, lineHeight: 1.8, color: C.textMuted }}>
-                Viele Trader kennen Begriffe wie <strong style={{ color: C.text }}>Hammer</strong>, <strong style={{ color: C.text }}>Doji</strong> oder <strong style={{ color: C.text }}>Shooting Star</strong>, tun sich aber schwer, diese Muster im echten Chart schnell zu erkennen. Ein interaktives Quiz hilft dir dabei, Kerzenmuster nicht nur theoretisch zu lernen, sondern sie visuell zu trainieren.
-              </p>
-            </div>
-            <div>
-              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>Für wen ist dieses Trading Quiz geeignet?</div>
-              <p style={{ fontSize: 15, lineHeight: 1.8, color: C.textMuted }}>
-                Dieses Quiz eignet sich für Anfänger die Trading von Grund auf lernen möchten, ebenso wie für fortgeschrittene Trader die ihr Wissen auffrischen wollen. Besonders im <strong style={{ color: C.text }}>Swing Trading</strong> ist das Verständnis von Kerzenmustern ein wertvoller Baustein.
-              </p>
-            </div>
-          </section>
-
-
-          {/* ── Bewertung + FAQ grau ── */}
-          <div style={{ background: C.surfaceHi, borderRadius: 10, padding: "16px", border: `1px solid ${C.border}`, display:"grid", gap:14 }}>
-          <div style={{ display:"flex", alignItems:"center", gap:12, padding:"12px 16px", borderRadius:8, background:C.surfaceHi, border:`1px solid ${C.border}` }}>
-            <div style={{ display:"flex", gap:2 }}>{[1,2,3,4,5].map(i=><svg key={i} width="18" height="18" viewBox="0 0 24 24" fill="#e3b341" stroke="#e3b341" strokeWidth="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>)}</div>
-            <div><span style={{ fontSize:15, fontWeight:600, color:C.text }}>4.9 / 5</span><span style={{ fontSize:13, color:C.textMuted, marginLeft:8 }}>Nutzerfeedback · Kostenlos</span></div>
-          </div>
-
-          {/* ── FAQ ── */}
-          <section style={{ display:"grid", gap:0 }}>
-            <div style={{ fontSize:20, fontWeight:600, marginBottom:16 }}>Häufige Fragen zu Candlestick Mustern und Patterns</div>
-            {[{q:"Was sind Candlestick Muster?",a:"Candlestick Muster (auch Kerzenmuster genannt) sind grafische Darstellungen von Kursbewegungen in einem bestimmten Zeitraum. Jede Kerze zeigt Eröffnungs-, Schluss-, Hoch- und Tiefstkurs. Bekannte Candlestick Patterns wie Hammer, Doji oder Shooting Star helfen Tradern dabei, mögliche Trendwechsel frühzeitig zu erkennen."},{q:"Was sind Candlestick Patterns auf Englisch?",a:"Candlestick Patterns sind die englische Bezeichnung für Kerzenmuster. Im Swing-Trading und in der technischen Analyse werden Begriffe wie Hammer, Shooting Star, Doji, Marubozu, Hanging Man, Dragonfly Doji, Gravestone Doji und Spinning Top international verwendet."},{q:"Was ist eine Flashcard?",a:"Eine Flashcard (Karteikarte) ist eine bewährte Lernmethode. Im Candlestick Quiz zeigt jede Flashcard ein Kerzenmuster mit Beschreibung, Signal, Bestätigung und Strategie – ideal um Candlestick Patterns schnell zu lernen und zu wiederholen."},{q:"Ist das Candlestick Quiz kostenlos?",a:"Ja, das Candlestick Quiz ist vollständig kostenlos und ohne Anmeldung nutzbar – auf Desktop und Mobilgeräten. Es fallen keine versteckten Kosten an."},{q:"Gibt es ein Zertifikat?",a:"Ja! Du kannst drei kostenlose Zertifikate erreichen: 🥉 Bronze (70%+ in 1 Runde), 🥈 Silber (80%+ in 3 Runden), 🥇 Gold (90%+ in 5 Runden). Das Zertifikat wird kostenlos per E-Mail zugeschickt."},{q:"Für wen ist dieses Quiz geeignet?",a:"Das Candlestick Quiz richtet sich an Einsteiger die Trading und Kerzenmuster von Grund auf lernen möchten, sowie an fortgeschrittene Trader die ihr Wissen zu Candlestick Patterns auffrischen und festigen wollen."},{q:"Wie viele Candlestick Muster sind enthalten?",a:"Das Quiz enthält 10 wichtige Candlestick Muster: Hammer, Inverted Hammer, Hanging Man, Shooting Star, Dragonfly Doji, Gravestone Doji, Marubozu (grün), Marubozu (rot), Doji und Spinning Top."},{q:"Unterschied Hammer und Hanging Man Candlestick?",a:"Beide Candlestick Muster sehen identisch aus – kleiner Körper oben, lange Lunte unten. Der Unterschied liegt im Kontext: Hammer erscheint nach Abwärtstrend (bullisches Signal), Hanging Man nach Aufwärtstrend (bärisches Signal)."},{q:"Wie wird ein Candlestick Muster bestätigt?",a:"Ein Candlestick Pattern gilt erst als bestätigt wenn die Folgekerze die erwartete Richtung bestätigt. Beim Hammer zum Beispiel eine grüne Kerze über dem Hammer-Hoch. RSI und Volumen helfen zusätzlich zur Bestätigung."}].map(({q,a},i)=><FaqItem key={i} question={q} answer={a}/>)}
-          </section>
-
-          </div>
-
-          {/* ── Fehler melden ── */}
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
-            <button className="nav-btn" onClick={() => setShowFeedbackForm((v) => !v)} style={{ fontSize: 11 }}>⚑ Fehler melden</button>
-          </div>
-          {showFeedbackForm && (
-            <div className="card" style={{ border: `1px solid ${C.border}` }}>
-              <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 12 }}>Fehler melden</div>
-              <p style={{ fontSize: 13, color: C.textMuted, marginBottom: 14, lineHeight: 1.6 }}>Hast du einen Fehler entdeckt? Schreib mir kurz – ich freue mich über jedes Feedback.</p>
-              <a href="mailto:gaucho0@web.de?subject=Fehler%20im%20Candlestick%20Quiz&body=Hallo%2C%0A%0Aich%20habe%20folgenden%20Fehler%20gefunden%3A%0A%0A"
-                style={{ display: "inline-block", padding: "9px 18px", borderRadius: 6, background: C.surfaceHi, border: `1px solid ${C.border}`, color: C.text, fontSize: 13, fontWeight: 600, textDecoration: "none" }}>
-                ✉ E-Mail schreiben
-              </a>
+          {/* CTA nach Runde */}
+          {lastRound&&mode==="quiz"&&(
+            <div style={{padding:"20px 24px",borderRadius:10,background:C.greenBg,border:`1.5px solid ${C.greenBdr}`,display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:14}}>
+              <div>
+                <div style={{fontSize:15,fontWeight:600,color:C.green}}>Nächste Runde 🔄</div>
+                <div style={{fontSize:13,color:C.textMuted,marginTop:3}}>Jede Runde ist eine neue Chance auf Bronze, Silber oder Gold.</div>
+              </div>
+              <button className="cta-btn" onClick={()=>{setLastRound(null);setRound({queue:buildRound(RS),index:0});setAnswer(null);}}>Neue Runde →</button>
             </div>
           )}
 
-          {/* ── Footer ── */}
-          <footer style={{ fontSize: 11, color: C.textDim, fontFamily: font.mono, lineHeight: 1.8, paddingTop: 8, borderTop: `1px solid ${C.border}` }}>
-            Legende: Signalstärke 1–10 · Neutral = Richtung erst durch Folgekerze · Wirkungsdauer in Tagen · Strategien für konservatives Swing-Trading
+          {/* SEO + FAQ */}
+          <section style={{display:"grid",gap:18,background:C.surfaceHi,borderRadius:10,padding:20,border:`1px solid ${C.border}`}}>
+            <div><div style={{fontSize:20,fontWeight:600,marginBottom:10}}>Was sind Candlestick Muster?</div>
+            <p style={{fontSize:15,lineHeight:1.8,color:C.textMuted}}>Candlestick Muster, auch <strong style={{color:C.text}}>Kerzenmuster</strong> genannt, sind ein zentrales Werkzeug der technischen Analyse im Trading.</p></div>
+          </section>
+
+          <div style={{background:C.surfaceHi,borderRadius:10,padding:16,border:`1px solid ${C.border}`,display:"grid",gap:14}}>
+            <div style={{fontSize:20,fontWeight:600}}>Häufige Fragen</div>
+            {[["Was sind Candlestick Muster?","Kerzenmuster zeigen Kursbewegungen grafisch. Patterns wie Hammer, Doji oder Shooting Star helfen Tradern Trendwechsel zu erkennen."],["Ist das Quiz kostenlos?","Ja, vollständig kostenlos und ohne Anmeldung nutzbar."],["Wie funktioniert das Zertifikat?","Nach jeder Runde: Bronze bei 70%+, Silber bei 80%+, Gold bei 90%+. Du kannst beliebig viele Runden spielen."],["Unterschied Hammer und Hanging Man?","Beide sehen identisch aus. Hammer nach Abwärtstrend = bullisch. Hanging Man nach Aufwärtstrend = bärisch."],["Wie wird ein Muster bestätigt?","Durch die Folgekerze die die Richtung bestätigt. RSI und Volumen helfen zusätzlich."]].map(([q,a])=><FaqItem key={q} q={q} a={a}/>)}
+          </div>
+
+          <div style={{display:"flex",justifyContent:"flex-end"}}>
+            <button className="nav-btn muted" onClick={()=>setShowFeedback(v=>!v)}>⚑ Fehler melden</button>
+          </div>
+          {showFeedback&&(
+            <div className="card">
+              <div style={{fontWeight:600,fontSize:15,marginBottom:12}}>Fehler melden</div>
+              <a href="mailto:gaucho0@web.de?subject=Fehler%20im%20Candlestick%20Quiz" style={{display:"inline-block",padding:"9px 18px",borderRadius:6,background:C.surfaceHi,border:`1px solid ${C.border}`,color:C.text,fontSize:13,fontWeight:600,textDecoration:"none"}}>✉ E-Mail schreiben</a>
+            </div>
+          )}
+
+          <footer style={{fontSize:11,color:C.textDim,fontFamily:font.mono,lineHeight:1.8,paddingTop:8,borderTop:`1px solid ${C.border}`}}>
+            Signalstärke 1–10 · Neutral = Richtung erst durch Folgekerze · Wirkungsdauer in Tagen
           </footer>
         </div>
 
-        {/* ── Impressum ── */}
-        <hr style={{ marginTop: "40px", opacity: 0.2 }} />
-        <div style={{ fontSize: "11px", opacity: 0.7, padding: "20px" }}>
-          <h3>Impressum</h3>
-          <p>Angaben gemäß § 5 TMG:<br />Ludolf Schnittger<br />Mexikoring 15<br />22297 Hamburg</p>
-          <p>Kontakt:<br />E-Mail: gaucho0@web.de</p>
-          <p>Haftungsausschluss:<br />Die Inhalte dieses Candlestick Quiz dienen ausschließlich zu Lern- und Informationszwecken. Es handelt sich ausdrücklich nicht um Anlageberatung.</p>
-          <p>© {new Date().getFullYear()} Candlestick Quiz – Kerzenmuster lernen</p>
+        <hr style={{marginTop:40,opacity:.2}}/>
+        <div style={{fontSize:11,opacity:.7,padding:20}}>
+          <strong>Impressum</strong><br/>Ludolf Schnittger · Mexikoring 15 · 22297 Hamburg · gaucho0@web.de<br/>
+          Die Inhalte dienen ausschließlich Lern- und Informationszwecken. Keine Anlageberatung.<br/>
+          © {new Date().getFullYear()} Candlestick Quiz
         </div>
 
-        {/* ── Reset Bestätigung ── */}
-        {showResetConfirm && (
-          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999, padding: 20 }}>
-            <div style={{ background: C.surface, border: `1px solid ${C.redBdr}`, borderRadius: 12, padding: 24, maxWidth: 360, width: "100%", display: "grid", gap: 14 }}>
-              <div style={{ fontSize: 15, fontWeight: 600 }}>Alles zurücksetzen?</div>
-              <p style={{ fontSize: 15, color: C.textMuted, lineHeight: 1.6 }}>Dein Punktestand und deine Lernhistorie werden gelöscht. Das kann nicht rückgängig gemacht werden.</p>
-              <div style={{ display: "flex", gap: 10 }}>
-                <button className="nav-btn danger" style={{ flex: 1 }} onClick={() => { resetAll(); setShowResetConfirm(false); }}>Ja, alles löschen</button>
-                <button className="nav-btn" style={{ flex: 1 }} onClick={() => setShowResetConfirm(false)}>Abbrechen</button>
+        {/* Reset Popup */}
+        {showReset&&(
+          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.6)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:999,padding:20}}>
+            <div style={{background:C.surface,border:`1px solid ${C.redBdr}`,borderRadius:12,padding:24,maxWidth:360,width:"100%",display:"grid",gap:14}}>
+              <div style={{fontSize:15,fontWeight:600}}>Alles zurücksetzen?</div>
+              <p style={{fontSize:15,color:C.textMuted,lineHeight:1.6}}>Punktestand und Lernhistorie werden gelöscht.</p>
+              <div style={{display:"flex",gap:10}}>
+                <button className="nav-btn danger" style={{flex:1}} onClick={()=>{resetAll();setShowReset(false);}}>Ja, löschen</button>
+                <button className="nav-btn" style={{flex:1}} onClick={()=>setShowReset(false)}>Abbrechen</button>
               </div>
             </div>
           </div>
         )}
 
-        {/* ── Zertifikat Popup ── */}
-        {showCertificate && (
-          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 20 }}>
-            <div className="cert-popup" style={{ background: C.surface, border: `1px solid ${C.greenBdr}`, borderRadius: 14, padding: 28, maxWidth: 440, width: "100%", display: "grid", gap: 16, maxHeight: "90vh", overflowY: "auto" }}>
-              {!certSent ? (
+        {/* Zertifikat Popup */}
+        {showCert&&(
+          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.75)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,padding:20}}>
+            <div style={{background:C.surface,border:`1px solid ${C.greenBdr}`,borderRadius:14,padding:28,maxWidth:440,width:"100%",display:"grid",gap:16,maxHeight:"90vh",overflowY:"auto"}}>
+              {!certSent?(
                 <>
-                  <div style={{ fontSize: 32, textAlign: "center" }}>🏆</div>
-                  <div style={{ fontSize: 20, fontWeight: 600, textAlign: "center", color: C.green }}>Glückwunsch – 10/10 erreicht!</div>
-                  <p style={{ fontSize: 15, color: C.textMuted, lineHeight: 1.6, textAlign: "center" }}>Füll das Formular aus und ich schicke dir dein persönliches <strong style={{ color: C.text }}>Zertifikat</strong> zu.</p>
-                  {[
-                    { label: "Vorname",  value: certFirstName, set: setCertFirstName, placeholder: "z. B. Max" },
-                    { label: "Nachname", value: certLastName,  set: setCertLastName,  placeholder: "z. B. Mustermann" },
-                    { label: "E-Mail",   value: certEmail,     set: setCertEmail,     placeholder: "deine@email.de", type: "email" },
-                  ].map(({ label, value, set, placeholder, type }) => (
-                    <div key={label} style={{ display: "grid", gap: 5 }}>
-                      <label style={{ fontSize: 11, color: C.textMuted, fontWeight: 600 }}>{label} <span style={{ color: C.red }}>*</span></label>
-                      <input type={type || "text"} placeholder={placeholder} value={value} onChange={(e) => set(e.target.value)} style={inputStyle} />
+                  <div style={{fontSize:32,textAlign:"center"}}>{certLevel.split(" ")[0]}</div>
+                  <div style={{fontSize:20,fontWeight:600,textAlign:"center",color:C.green}}>Glückwunsch – {certLevel} erreicht!</div>
+                  <p style={{fontSize:15,color:C.textMuted,lineHeight:1.6,textAlign:"center"}}>Füll das Formular aus – ich schicke dir dein <strong style={{color:C.text}}>Zertifikat</strong> zu.</p>
+                  {[{l:"Vorname",v:certFirst,s:setCertFirst,p:"z. B. Max"},{l:"Nachname",v:certLast,s:setCertLast,p:"z. B. Mustermann"},{l:"E-Mail",v:certEmail,s:setCertEmail,p:"deine@email.de",t:"email"}].map(({l,v,s,p,t})=>(
+                    <div key={l} style={{display:"grid",gap:5}}>
+                      <label style={{fontSize:11,color:C.textMuted,fontWeight:600}}>{l} <span style={{color:C.red}}>*</span></label>
+                      <input type={t||"text"} placeholder={p} value={v} onChange={e=>s(e.target.value)} style={inp}/>
                     </div>
                   ))}
-                  <div style={{ display: "grid", gap: 5 }}>
-                    <label style={{ fontSize: 11, color: C.textMuted, fontWeight: 600 }}>Geburtsdatum <span style={{ fontSize: 11, color: C.textDim, fontWeight: 400 }}>(optional)</span></label>
-                    <input type="date" value={certBirthdate} onChange={(e) => setCertBirthdate(e.target.value)} style={inputStyle} />
-                  </div>
-                  <div style={{ display: "grid", gap: 5 }}>
-                    <label style={{ fontSize: 11, color: C.textMuted, fontWeight: 600 }}>Postleitzahl <span style={{ fontSize: 11, color: C.textDim, fontWeight: 400 }}>(optional – für regionale Angebote)</span></label>
-                    <input type="text" placeholder="z. B. 22297" value={certPlz} onChange={(e) => setCertPlz(e.target.value.replace(/\D/g, "").slice(0, 5))} maxLength={5} style={inputStyle} />
-                  </div>
-                  <label style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 11, color: C.textMuted, cursor: "pointer" }}>
-                    <input type="checkbox" checked={certPrivacy} onChange={(e) => setCertPrivacy(e.target.checked)} style={{ marginTop: 2, flexShrink: 0 }} />
-                    Ich stimme zu, dass meine Daten zum Versand des Zertifikats verwendet werden. Kein Spam, keine Weitergabe.
+                  <label style={{display:"flex",alignItems:"flex-start",gap:10,fontSize:11,color:C.textMuted,cursor:"pointer"}}>
+                    <input type="checkbox" checked={certPrivacy} onChange={e=>setCertPrivacy(e.target.checked)} style={{marginTop:2,flexShrink:0}}/>
+                    Ich stimme zu, dass meine Daten zum Versand des Zertifikats verwendet werden.
                   </label>
-                  <div style={{ display: "flex", gap: 10 }}>
-                    <button className="nav-btn primary" style={{ flex: 1, opacity: (!certFirstName || !certLastName || !certEmail || !certPrivacy) ? 0.4 : 1 }}
-                      disabled={!certFirstName || !certLastName || !certEmail || !certPrivacy}
-                      onClick={() => {
-                        const heute = new Date().toLocaleDateString("de-DE");
-                        const geburt = certBirthdate ? `\nGeburtsdatum: ${new Date(certBirthdate).toLocaleDateString("de-DE")} (auf Wunsch)` : "";
-                        const plz    = certPlz ? `\nPostleitzahl: ${certPlz}` : "";
-                        const body   = `Hallo,\n\nich habe gerade 10/10 im Candlestick Quiz erreicht und würde mich sehr über mein Zertifikat freuen.\n\nMein Name: ${certFirstName} ${certLastName}\nMeine E-Mail: ${certEmail}${geburt}${plz}\nWebseite: Candlestick Quiz\nDatum: ${heute}\n\nViele Grüße\n${certFirstName} ${certLastName}`;
-                        window.location.href = `mailto:gaucho0@web.de?subject=${encodeURIComponent("Zertifikat Anfrage – Candlestick Quiz")}&body=${encodeURIComponent(body)}`;
+                  <div style={{display:"flex",gap:10}}>
+                    <button className="nav-btn primary" style={{flex:1,opacity:(!certFirst||!certLast||!certEmail||!certPrivacy)?.4:1}}
+                      disabled={!certFirst||!certLast||!certEmail||!certPrivacy}
+                      onClick={()=>{
+                        const body=`Hallo,\n\nich habe ${certLevel} im Candlestick Quiz erreicht!\n\nName: ${certFirst} ${certLast}\nE-Mail: ${certEmail}\nDatum: ${new Date().toLocaleDateString("de-DE")}`;
+                        window.location.href=`mailto:gaucho0@web.de?subject=${encodeURIComponent("Zertifikat – Candlestick Quiz")}&body=${encodeURIComponent(body)}`;
                         setCertSent(true);
-                      }}>
-                      Zertifikat anfordern →
-                    </button>
-                    <button className="nav-btn" onClick={() => setShowCertificate(false)}>Schließen</button>
+                      }}>Zertifikat anfordern →</button>
+                    <button className="nav-btn" onClick={()=>setShowCert(false)}>Schließen</button>
                   </div>
                 </>
-              ) : (
+              ):(
                 <>
-                  <div style={{ fontSize: 32, textAlign: "center" }}>✉️</div>
-                  <div style={{ fontSize: 15, fontWeight: 600, textAlign: "center", color: C.green }}>Anfrage wird gesendet!</div>
-                  <p style={{ fontSize: 15, color: C.textMuted, lineHeight: 1.6, textAlign: "center" }}>Dein E-Mail-Programm öffnet sich gleich. Bitte auf <strong style={{ color: C.text }}>Senden</strong> klicken.</p>
-                  <button className="nav-btn primary" onClick={() => { setShowCertificate(false); setCertSent(false); setCertEmail(""); setCertFirstName(""); setCertLastName(""); setCertBirthdate(""); setCertPlz(""); setCertPrivacy(false); }}>Schließen</button>
+                  <div style={{fontSize:32,textAlign:"center"}}>✉️</div>
+                  <div style={{fontSize:15,fontWeight:600,textAlign:"center",color:C.green}}>E-Mail-Programm öffnet sich!</div>
+                  <button className="nav-btn primary" onClick={()=>{setShowCert(false);setCertSent(false);setCertEmail("");setCertFirst("");setCertLast("");setCertPrivacy(false);}}>Schließen</button>
                 </>
               )}
             </div>
@@ -1240,3 +726,5 @@ export default function App() {
     </>
   );
 }
+
+export default App;
