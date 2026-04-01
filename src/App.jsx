@@ -889,13 +889,6 @@ export default function App() {
               </div>
             </section>
 
-
-
-          {/* ── Retention Hinweis ── */}
-          <div className="info-box" style={{ padding: "10px 16px", borderRadius: 8 }}>
-            💡 <strong style={{ color: C.text }}>Tipp:</strong> Trainiere täglich 5 Minuten und verbessere dein Trading systematisch.
-          </div>
-
           {/* ── Progress ── */}
           {mode === "quiz" && !inReview && (
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -917,7 +910,7 @@ export default function App() {
 
           {/* ── Quiz ── */}
           {mode === "quiz" && !inReview && (
-            <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+            <div style={{ display:"flex", gap:8, flexWrap:"wrap", background:C.surfaceHi, borderRadius:10, padding:"12px", border:`1px solid ${C.border}` }}>
               {[{key:"bronze",label:"🥉 Bronze",desc:"70%+ in 1 Runde",done:roundStats.bronzeDone,count:roundStats.rounds.filter(p=>p>=70).length,need:1},{key:"silber",label:"🥈 Silber",desc:"80%+ in 3 Runden",done:roundStats.silberDone,count:roundStats.rounds.filter(p=>p>=80).length,need:3},{key:"gold",label:"🥇 Gold",desc:"90%+ in 5 Runden",done:roundStats.goldDone,count:roundStats.rounds.filter(p=>p>=90).length,need:5}].map(({key,label,desc,done,count,need})=>(
                 <div key={key} style={{flex:1,minWidth:140,padding:"10px 14px",borderRadius:8,border:`1px solid ${done?C.greenBdr:C.border}`,background:done?C.greenBg:C.surfaceHi,display:"flex",flexDirection:"column",gap:4}}>
                   <div style={{fontSize:13,fontWeight:600,color:done?C.green:C.text}}>{label}</div>
@@ -941,7 +934,7 @@ export default function App() {
                       <span style={{ fontFamily: font.mono, fontSize: 11, color: C.textDim }}>FRAGE {curNum}/{totalNum}</span>
                       <span className={`tag ${colorTag(q.item?.typ)}`}>{q.item?.typ}</span>
                     </div>
-                    <p style={{ fontSize: 15, lineHeight: 1.6, color: C.text }}>{q.prompt}</p>
+                    <p style={{ fontSize: 16, lineHeight: 1.6, color: C.text, fontWeight: 600 }}>{q.prompt}</p>
                   </div>
                 </div>
 
@@ -1103,7 +1096,7 @@ export default function App() {
           )}
 
           {/* ── SEO Content ── */}
-          <section className="card" style={{ display: "grid", gap: 18 }}>
+          <section style={{ display: "grid", gap: 18, background: C.surfaceHi, borderRadius: 10, padding: 20, border: `1px solid ${C.border}` }}>
             <div>
               <div style={{ fontSize: 20, fontWeight: 600, marginBottom: 10 }}>Was sind Candlestick Muster?</div>
               <p style={{ fontSize: 15, lineHeight: 1.8, color: C.textMuted }}>
@@ -1125,7 +1118,8 @@ export default function App() {
           </section>
 
 
-          {/* ── Bewertung ── */}
+          {/* ── Bewertung + FAQ grau ── */}
+          <div style={{ background: C.surfaceHi, borderRadius: 10, padding: "16px", border: `1px solid ${C.border}`, display:"grid", gap:14 }}>
           <div style={{ display:"flex", alignItems:"center", gap:12, padding:"12px 16px", borderRadius:8, background:C.surfaceHi, border:`1px solid ${C.border}` }}>
             <div style={{ display:"flex", gap:2 }}>{[1,2,3,4,5].map(i=><svg key={i} width="18" height="18" viewBox="0 0 24 24" fill="#e3b341" stroke="#e3b341" strokeWidth="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>)}</div>
             <div><span style={{ fontSize:15, fontWeight:600, color:C.text }}>4.9 / 5</span><span style={{ fontSize:13, color:C.textMuted, marginLeft:8 }}>Nutzerfeedback · Kostenlos</span></div>
@@ -1136,6 +1130,8 @@ export default function App() {
             <div style={{ fontSize:20, fontWeight:600, marginBottom:16 }}>Häufige Fragen zu Candlestick Mustern und Patterns</div>
             {[{q:"Was sind Candlestick Muster?",a:"Candlestick Muster (auch Kerzenmuster genannt) sind grafische Darstellungen von Kursbewegungen in einem bestimmten Zeitraum. Jede Kerze zeigt Eröffnungs-, Schluss-, Hoch- und Tiefstkurs. Bekannte Candlestick Patterns wie Hammer, Doji oder Shooting Star helfen Tradern dabei, mögliche Trendwechsel frühzeitig zu erkennen."},{q:"Was sind Candlestick Patterns auf Englisch?",a:"Candlestick Patterns sind die englische Bezeichnung für Kerzenmuster. Im Swing-Trading und in der technischen Analyse werden Begriffe wie Hammer, Shooting Star, Doji, Marubozu, Hanging Man, Dragonfly Doji, Gravestone Doji und Spinning Top international verwendet."},{q:"Was ist eine Flashcard?",a:"Eine Flashcard (Karteikarte) ist eine bewährte Lernmethode. Im Candlestick Quiz zeigt jede Flashcard ein Kerzenmuster mit Beschreibung, Signal, Bestätigung und Strategie – ideal um Candlestick Patterns schnell zu lernen und zu wiederholen."},{q:"Ist das Candlestick Quiz kostenlos?",a:"Ja, das Candlestick Quiz ist vollständig kostenlos und ohne Anmeldung nutzbar – auf Desktop und Mobilgeräten. Es fallen keine versteckten Kosten an."},{q:"Gibt es ein Zertifikat?",a:"Ja! Du kannst drei kostenlose Zertifikate erreichen: 🥉 Bronze (70%+ in 1 Runde), 🥈 Silber (80%+ in 3 Runden), 🥇 Gold (90%+ in 5 Runden). Das Zertifikat wird kostenlos per E-Mail zugeschickt."},{q:"Für wen ist dieses Quiz geeignet?",a:"Das Candlestick Quiz richtet sich an Einsteiger die Trading und Kerzenmuster von Grund auf lernen möchten, sowie an fortgeschrittene Trader die ihr Wissen zu Candlestick Patterns auffrischen und festigen wollen."},{q:"Wie viele Candlestick Muster sind enthalten?",a:"Das Quiz enthält 10 wichtige Candlestick Muster: Hammer, Inverted Hammer, Hanging Man, Shooting Star, Dragonfly Doji, Gravestone Doji, Marubozu (grün), Marubozu (rot), Doji und Spinning Top."},{q:"Unterschied Hammer und Hanging Man Candlestick?",a:"Beide Candlestick Muster sehen identisch aus – kleiner Körper oben, lange Lunte unten. Der Unterschied liegt im Kontext: Hammer erscheint nach Abwärtstrend (bullisches Signal), Hanging Man nach Aufwärtstrend (bärisches Signal)."},{q:"Wie wird ein Candlestick Muster bestätigt?",a:"Ein Candlestick Pattern gilt erst als bestätigt wenn die Folgekerze die erwartete Richtung bestätigt. Beim Hammer zum Beispiel eine grüne Kerze über dem Hammer-Hoch. RSI und Volumen helfen zusätzlich zur Bestätigung."}].map(({q,a},i)=><FaqItem key={i} question={q} answer={a}/>)}
           </section>
+
+          </div>
 
           {/* ── Fehler melden ── */}
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
