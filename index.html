@@ -64,12 +64,19 @@ const GlobalStyle = ({theme})=>{
     .choice-btn .badge{flex-shrink:0;width:20px;height:20px;border-radius:4px;border:1px solid ${c.borderHi};background:${c.surfaceHi};display:flex;align-items:center;justify-content:center;font-family:${font.mono};font-size:11px;color:${c.textMuted};margin-top:1px}
     .choice-btn.correct .badge{background:${c.greenBdr};border-color:${c.green};color:#fff}
     .choice-btn.wrong .badge{background:${c.redBdr};border-color:${c.red};color:#fff}
-    .nav-btn{padding:6px 13px;border-radius:6px;border:1.5px solid ${c.border};background:${c.surface};color:${c.textMuted};font-family:${font.sans};font-size:13px;font-weight:400;cursor:pointer;transition:border-color .15s,color .15s,background .15s,box-shadow .15s;box-shadow:0 2px 5px rgba(0,0,0,.15)}
-    .nav-btn:hover{border-color:${c.blue};color:${c.blue};background:${c.blueBg}}
-    .nav-btn.active{border-color:${c.blue};color:${c.blue};background:${c.blueBg}}
+    .nav-btn{padding:6px 13px;border-radius:6px;border:1.5px solid ${c.borderHi};background:${c.surface};color:${c.text};font-family:${font.sans};font-size:13px;font-weight:400;cursor:pointer;transition:border-color .15s,color .15s,background .15s,box-shadow .15s;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+    .nav-btn:hover{border-color:${c.blue};color:${c.blue};background:${c.blueBg};box-shadow:0 2px 6px rgba(0,0,0,.15)}
+    .nav-btn.active{border-color:${c.blue};color:${c.blue};background:${c.blueBg};font-weight:600}
     .nav-btn.primary{border-color:${c.greenBdr};color:${c.green};background:${c.greenBg};font-weight:600}
-    .nav-btn.primary:hover{border-color:${c.green}}
-    .nav-btn.danger{border-color:${c.redBdr};color:${c.red};background:${c.redBg}}
+    .nav-btn.primary:hover{border-color:${c.green};box-shadow:0 2px 8px rgba(63,185,80,.25)}
+    .nav-btn.danger{border-color:${c.redBdr};color:${c.red};background:${c.redBg};font-weight:600}
+    .nav-btn.danger:hover{border-color:${c.red};box-shadow:0 2px 8px rgba(248,81,73,.2)}
+    .nav-btn.secondary{border-color:${c.blueBdr};color:${c.blue};background:${c.blueBg};font-weight:600}
+    .nav-btn.secondary:hover{border-color:${c.blue};box-shadow:0 2px 8px rgba(88,166,255,.2)}
+    .nav-btn.muted{border-color:${c.border};color:${c.textMuted};background:${c.surfaceHi};font-size:11px}
+    .nav-btn.muted:hover{border-color:${c.borderHi};color:${c.text}}
+    .cta-btn{display:inline-flex;align-items:center;gap:8px;padding:13px 28px;border-radius:8px;background:${c.green};color:#fff;font-weight:700;font-size:15px;border:none;cursor:pointer;box-shadow:0 4px 14px rgba(63,185,80,.4);transition:opacity .15s,transform .15s,box-shadow .15s;letter-spacing:0.01em}
+    .cta-btn:hover{opacity:.9;transform:translateY(-2px);box-shadow:0 6px 20px rgba(63,185,80,.5)}
     .card{background:${c.surface};border:1.5px solid ${c.border};border-radius:10px;padding:20px;animation:fadeIn .2s ease forwards}
     .quiz-card{background:${c.surface};border:1.5px solid ${c.blue}33;border-radius:10px;padding:20px;animation:fadeIn .2s ease forwards;box-shadow:0 2px 10px rgba(0,0,0,.08)}
     .tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-family:${font.mono};letter-spacing:.02em;font-weight:400}
@@ -400,7 +407,7 @@ function App(){
             <div className="header-nav" style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
               <div className="score-badge">Punkte <span>{score}</span></div>
               <div style={{width:1,height:24,background:C.border}}/>
-              <button className="nav-btn" onClick={()=>setTheme(t=>t==="dark"?"light":"dark")} style={{fontSize:15,padding:"5px 10px"}}>
+              <button className="nav-btn muted" onClick={()=>setTheme(t=>t==="dark"?"light":"dark")} style={{fontSize:15,padding:"5px 10px"}}>
                 {theme==="dark"
                   ?<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
                   :<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -410,7 +417,7 @@ function App(){
               <button className={`nav-btn${mode==="quiz"?" active":""}`} onClick={()=>setMode("quiz")}>Quiz</button>
               <button className={`nav-btn${mode==="lernen"?" active":""}`} onClick={()=>setMode("lernen")}>Lernen</button>
               <button className={`nav-btn${mode==="flash"?" active":""}`} onClick={()=>setMode("flash")}>Flashcards</button>
-              <button className="nav-btn" onClick={()=>setShowResetConfirm(true)}>Reset</button>
+              <button className="nav-btn danger" onClick={()=>setShowResetConfirm(true)}>Reset</button>
               {inReview&&<button className="nav-btn danger" onClick={stopReview}>Review ✕</button>}
             </div>
           </header>
@@ -766,8 +773,7 @@ function App(){
                 <div style={{fontSize:18,fontWeight:600,color:C.green}}>Bereit für den Quiz? 🚀</div>
                 <p style={{fontSize:14,color:C.textMuted,lineHeight:1.6}}>Du kennst jetzt die Grundlagen. Teste dein Wissen mit <strong style={{color:C.text}}>10 Fragen</strong> zu den wichtigsten Candlestick Mustern.</p>
                 <div>
-                  <button className="nav-btn primary" onClick={()=>setMode("quiz")}
-                    style={{fontSize:15,padding:"12px 28px",borderRadius:8}}>
+                  <button className="cta-btn" onClick={()=>setMode("quiz")}>
                     Quiz jetzt starten →
                   </button>
                 </div>
@@ -816,6 +822,11 @@ function App(){
                   </div>
                 ))}
               </div>
+              <div style={{padding:"24px",borderRadius:10,background:C.greenBg,border:`1.5px solid ${C.greenBdr}`,textAlign:"center",display:"grid",gap:12,marginTop:4}}>
+                <div style={{fontSize:18,fontWeight:600,color:C.green}}>Wissen testen? 🎯</div>
+                <p style={{fontSize:14,color:C.textMuted,lineHeight:1.6}}>Du hast alle Muster gesehen. Jetzt kommt der Praxistest – <strong style={{color:C.text}}>10 Fragen</strong>, Zertifikat möglich.</p>
+                <div><button className="cta-btn" onClick={()=>setMode("quiz")}>Quiz jetzt starten →</button></div>
+              </div>
             </>
           )}
 
@@ -841,7 +852,7 @@ function App(){
                 </div>
                 <div style={{display:"flex",gap:10,alignItems:"center"}}>
                   <div style={{fontFamily:font.mono,fontSize:20,fontWeight:600,color:lastRound.percent>=70?C.green:lastRound.percent>=40?C.yellow:C.red}}>{lastRound.percent}%</div>
-                  <button className="nav-btn" style={{opacity:lastRound.entries.filter(e=>!e.isCorrect).length===0?0.4:1}} disabled={lastRound.entries.filter(e=>!e.isCorrect).length===0} onClick={startReviewWrong}>Falsche wiederholen</button>
+                  <button className="nav-btn secondary" style={{opacity:lastRound.entries.filter(e=>!e.isCorrect).length===0?0.4:1}} disabled={lastRound.entries.filter(e=>!e.isCorrect).length===0} onClick={startReviewWrong}>Falsche wiederholen</button>
                 </div>
               </div>
               <div style={{overflowX:"auto"}}>
@@ -871,7 +882,16 @@ function App(){
             </div>
           )}
 
-          {/* SEO */}
+          {/* CTA nach Rundenübersicht */}
+          {lastRound&&mode==="quiz"&&(
+            <div style={{padding:"20px 24px",borderRadius:10,background:C.greenBg,border:`1.5px solid ${C.greenBdr}`,display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:14}}>
+              <div>
+                <div style={{fontSize:15,fontWeight:600,color:C.green}}>Nächste Runde starten 🔄</div>
+                <div style={{fontSize:13,color:C.textMuted,marginTop:3}}>Verbessere deinen Score und sichere dir das nächste Zertifikat.</div>
+              </div>
+              <button className="cta-btn" onClick={()=>{setLastRound(null);setRound({queue:buildRoundQuestions(ROUND_SIZE),index:0});setAnswer(null);}}>Neue Runde →</button>
+            </div>
+          )}
           <section style={{display:"grid",gap:18,background:C.surfaceHi,borderRadius:10,padding:20,border:`1px solid ${C.border}`}}>
             <div>
               <div style={{fontSize:20,fontWeight:600,marginBottom:10}}>Was sind Candlestick Muster?</div>
@@ -901,7 +921,7 @@ function App(){
 
           {/* Fehler melden */}
           <div style={{display:"flex",justifyContent:"flex-end"}}>
-            <button className="nav-btn" onClick={()=>setShowFeedbackForm(v=>!v)} style={{fontSize:11}}>⚑ Fehler melden</button>
+            <button className="nav-btn muted" onClick={()=>setShowFeedbackForm(v=>!v)}>⚑ Fehler melden</button>
           </div>
           {showFeedbackForm&&(
             <div className="card" style={{border:`1px solid ${C.border}`}}>
