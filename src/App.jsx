@@ -333,17 +333,24 @@ function App(){
             </div>
           </header>
 
-          {/* Onboarding Banner */}
-          {isFirstVisit&&mode==="quiz"&&(
-            <div style={{padding:"14px 18px",borderRadius:10,background:C.blueBg,border:`1.5px solid ${C.blueBdr}`,display:"flex",alignItems:"center",justifyContent:"space-between",gap:14,flexWrap:"wrap",animation:"fadeIn .3s ease forwards"}}>
-              <div style={{display:"flex",alignItems:"center",gap:12}}>
-                <span style={{fontSize:22}}>👋</span>
-                <div>
-                  <div style={{fontSize:13,fontWeight:600,color:C.text}}>Neu hier? Starte mit dem Lernen-Tab!</div>
-                  <div style={{fontSize:12,color:C.textMuted,marginTop:2}}>Lerne zuerst was Kerzen sind – dann macht das Quiz viel mehr Sinn.</div>
-                </div>
+          {/* Hero – immer sichtbar im Quiz-Tab */}
+          {mode==="quiz"&&!inReview&&!lastRound&&(
+            <div style={{padding:"24px",borderRadius:10,background:C.surface,border:`1.5px solid ${C.border}`,display:"grid",gap:16,animation:"fadeIn .3s ease forwards"}}>
+              <div>
+                <h1 style={{fontSize:20,fontWeight:600,color:C.text,lineHeight:1.3,marginBottom:8}}>Candlestick Quiz – Kerzenmuster verstehen und Trading lernen</h1>
+                <p style={{fontSize:15,lineHeight:1.8,color:C.textMuted}}>Lerne die wichtigsten <strong style={{color:C.text}}>Candlestick Muster</strong> wie Hammer, Doji, Shooting Star und Marubozu. Verbessere deine Chartanalyse und dein Wissen im Swing Trading.</p>
               </div>
-              <button className="cta-btn" style={{fontSize:13,padding:"9px 18px"}} onClick={()=>setMode("lernen")}>Jetzt lernen →</button>
+              <ul style={{listStyle:"none",padding:0,margin:0,display:"grid",gap:6}}>
+                {["10 Kerzenmuster mit Kontext-Chart und Strategie","Für Anfänger und Fortgeschrittene geeignet","Kostenlos – ohne Anmeldung sofort starten"].map(t=>(
+                  <li key={t} style={{fontSize:14,color:C.textMuted,display:"flex",gap:8}}>
+                    <span style={{color:C.green,flexShrink:0}}>✓</span><span>{t}</span>
+                  </li>
+                ))}
+              </ul>
+              <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+                <button className="cta-btn" onClick={()=>setMode("lernen")}>Erst lernen →</button>
+                <button className="nav-btn primary" onClick={()=>document.getElementById("quiz-anchor")?.scrollIntoView({behavior:"smooth"})}>Direkt zum Quiz ↓</button>
+              </div>
             </div>
           )}
 
