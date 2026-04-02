@@ -637,8 +637,18 @@ function App(){
 
           {/* SEO + FAQ */}
           <section style={{display:"grid",gap:18,background:C.surfaceHi,borderRadius:10,padding:20,border:`1px solid ${C.border}`}}>
-            <div><div style={{fontSize:20,fontWeight:600,marginBottom:10}}>Was sind Candlestick Muster?</div>
-            <p style={{fontSize:15,lineHeight:1.8,color:C.textMuted}}>Candlestick Muster, auch <strong style={{color:C.text}}>Kerzenmuster</strong> genannt, sind ein zentrales Werkzeug der technischen Analyse im Trading.</p></div>
+            <div>
+              <div style={{fontSize:20,fontWeight:600,marginBottom:10}}>Was sind Candlestick Muster?</div>
+              <p style={{fontSize:15,lineHeight:1.8,color:C.textMuted}}>Candlestick Muster, auch <strong style={{color:C.text}}>Kerzenmuster</strong> genannt, sind ein zentrales Werkzeug der technischen Analyse. Sie helfen Tradern dabei, das Verhalten von Käufern und Verkäufern im Chart besser zu verstehen und mögliche Trendwechsel frühzeitig zu erkennen.</p>
+            </div>
+            <div>
+              <div style={{fontSize:15,fontWeight:600,marginBottom:8}}>Warum ist ein Candlestick Quiz sinnvoll?</div>
+              <p style={{fontSize:15,lineHeight:1.8,color:C.textMuted}}>Viele Trader kennen Begriffe wie <strong style={{color:C.text}}>Hammer</strong>, <strong style={{color:C.text}}>Doji</strong> oder <strong style={{color:C.text}}>Shooting Star</strong>, tun sich aber schwer diese Muster im echten Chart schnell zu erkennen. Ein interaktives Quiz hilft dir dabei, Kerzenmuster nicht nur theoretisch zu lernen sondern sie visuell zu trainieren – genau so wie es professionelle Trader tun.</p>
+            </div>
+            <div>
+              <div style={{fontSize:15,fontWeight:600,marginBottom:8}}>Für wen ist dieses Trading Quiz geeignet?</div>
+              <p style={{fontSize:15,lineHeight:1.8,color:C.textMuted}}>Dieses Quiz eignet sich für <strong style={{color:C.text}}>Anfänger</strong> die Trading von Grund auf lernen möchten, ebenso wie für fortgeschrittene Trader die ihr Wissen zu Candlestick Patterns auffrischen wollen. Besonders im <strong style={{color:C.text}}>Swing Trading</strong> ist das Verständnis von Kerzenmustern ein wertvoller Baustein für bessere Handelsentscheidungen.</p>
+            </div>
           </section>
 
           <div style={{background:C.surfaceHi,borderRadius:10,padding:16,border:`1px solid ${C.border}`,display:"grid",gap:14}}>
@@ -704,9 +714,21 @@ function App(){
                   <div style={{display:"flex",gap:10}}>
                     <button className="nav-btn primary" style={{flex:1,opacity:(!certFirst||!certLast||!certEmail||!certPrivacy)?.4:1}}
                       disabled={!certFirst||!certLast||!certEmail||!certPrivacy}
-                      onClick={()=>{
-                        const body=`Hallo,\n\nich habe ${certLevel} im Candlestick Quiz erreicht!\n\nName: ${certFirst} ${certLast}\nE-Mail: ${certEmail}\nDatum: ${new Date().toLocaleDateString("de-DE")}`;
-                        window.location.href=`mailto:gaucho0@web.de?subject=${encodeURIComponent("Zertifikat – Candlestick Quiz")}&body=${encodeURIComponent(body)}`;
+                      onClick={async()=>{
+                        try{
+                          await fetch("https://formspree.io/f/mkopzqqz",{
+                            method:"POST",
+                            headers:{"Content-Type":"application/json"},
+                            body:JSON.stringify({
+                              vorname:certFirst,
+                              nachname:certLast,
+                              email:certEmail,
+                              zertifikat:certLevel,
+                              datum:new Date().toLocaleDateString("de-DE"),
+                              _subject:`Zertifikat ${certLevel} – ${certFirst} ${certLast}`,
+                            })
+                          });
+                        }catch(e){console.error(e);}
                         setCertSent(true);
                       }}>Zertifikat anfordern →</button>
                     <button className="nav-btn" onClick={()=>setShowCert(false)}>Schließen</button>
@@ -715,7 +737,8 @@ function App(){
               ):(
                 <>
                   <div style={{fontSize:32,textAlign:"center"}}>✉️</div>
-                  <div style={{fontSize:15,fontWeight:600,textAlign:"center",color:C.green}}>E-Mail-Programm öffnet sich!</div>
+                  <div style={{fontSize:15,fontWeight:600,textAlign:"center",color:C.green}}>Anfrage gesendet!</div>
+                  <p style={{fontSize:15,color:C.textMuted,lineHeight:1.6,textAlign:"center"}}>Ich schicke dir dein <strong style={{color:C.text}}>{certLevel} Zertifikat</strong> so schnell wie möglich an <strong style={{color:C.text}}>{certEmail}</strong>.</p>
                   <button className="nav-btn primary" onClick={()=>{setShowCert(false);setCertSent(false);setCertEmail("");setCertFirst("");setCertLast("");setCertPrivacy(false);}}>Schließen</button>
                 </>
               )}
